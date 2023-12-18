@@ -14,6 +14,7 @@ cd bamboo
 Make sure you have Python 3.12 and [PDM](https://pdm-project.org/) installed, then install the dependencies:
 
 ```bash
+cd backend
 pdm install
 ```
 
@@ -26,7 +27,7 @@ pdm serve
 Run the frontend development server(need to install [pnpm](https://pnpm.io/)):
 
 ```bash
-cd frontend
+cd ../frontend
 pnpm install
 pnpm dev
 ```

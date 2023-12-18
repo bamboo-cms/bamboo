@@ -1,7 +1,7 @@
 
 [project]
 name = "bamboo"
-version = "0.0.0"
+version = "0.1.0"
 description = "A CMS optimized for conference hosting"
 authors = [
     {name = "Bamboo Team", email = "me@frostming.com"},
@@ -17,6 +17,9 @@ license = {text = "BSD 3-Clause"}
 
 [tool.pdm]
 package-type = "application"
+
+[tool.pdm.scripts]
+serve = { shell = "cd backend && flask run", help = "Run the development server" }
 
 [tool.pdm.dev-dependencies]
 test = [

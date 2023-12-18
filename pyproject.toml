@@ -1,0 +1,21 @@
+
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "Bamboo Team", email = "me@frostming.com"},
+]
+dependencies = [
+    "apiflask>=2.1.0",
+    "flask-sqlalchemy>=3.1.1",
+    "flask-migrate>=4.0.5",
+    "python-dotenv>=1.0.0",
+]
+requires-python = ">=3.12"
+license = {text = "BSD 3-Clause"}
+
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest>=7.4.3",
+]

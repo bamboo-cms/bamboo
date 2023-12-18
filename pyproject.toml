@@ -19,7 +19,9 @@ license = {text = "BSD 3-Clause"}
 package-type = "application"
 
 [tool.pdm.scripts]
-serve = { shell = "cd backend && flask run", help = "Run the development server" }
+serve = { shell = "flask run", help = "Run the development server" }
+create-tables = { shell = "cd backend && flask create-tables", help = "Create tables" }
+drop-tables = { shell = "cd backend && flask drop-tables", help = "Drop tables" }
 
 [tool.pdm.dev-dependencies]
 test = [

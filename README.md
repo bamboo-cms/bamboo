@@ -23,7 +23,13 @@ Run the backend application:
 pdm serve
 ```
 
-Run the frontend development server(need to install [pnpm](https://pnpm.io/)):
+You can create tables in the database by running:
+
+```bash
+pdm create-tables
+```
+
+Run the frontend development server (need to install [pnpm](https://pnpm.io/)):
 
 ```bash
 cd frontend

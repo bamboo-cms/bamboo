@@ -1,0 +1,44 @@
+# 网络配置
+networks:
+  devNetwork:
+    driver: ${NETWORKS_DRIVER}
+
+# 服务容器配置
+services:
+  mysql:
+    image: mysql:8.0
+    privileged: true
+    environment:
+      - TZ=${TZ}
+      - MYSQL_USER=${MYSQL_USERNAME}                  # 设置 Mysql 用户名称
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}              # 设置 Mysql 用户密码
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}    # 设置 Mysql root 用户密码
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    volumes:
+      - ${MySQL_PATH}:/var/lib/mysql 
+    ports:
+      - "${MYSQL_PORT}:3306"                          # 设置容器3306端口映射指定宿主机端口
+    networks:
+      - devNetwork
+    deploy:
+      resources:
+        limits:
+          memory: ${LIMIT_MEMORY_MYSQL}
+    restart: always
+
+  redis:
+    image: redis:5.0
+    environment:
+      - TZ=${TZ}
+    privileged: true
+    volumes:
+      - ${REDIS_PATH}:/data                 # 引用 .env 配置中 DATA_PATH_HOST 变量，将宿主机上存放 Redis 数据的目录挂载到容器中 /data 目录
+    ports:
+      - "${REDIS_PORT}:6379"                          # 设置容器6379端口映射指定宿主机端口
+    networks:
+      - devNetwork
+    deploy:
+      resources:
+        limits:
+          memory: ${LIMIT_MEMORY_REDIS}
+    restart: always

@@ -162,4 +162,4 @@ cython_debug/
 .pdm-python
 *.db
 
-./data/
+data/**

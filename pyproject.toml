@@ -18,6 +18,9 @@ license = {text = "BSD 3-Clause"}
 [tool.pdm]
 package-type = "application"
 
+[tool.pdm.scripts]
+serve = { shell = "cd backend && flask run", help = "Run the development server" }
+
 [tool.pdm.dev-dependencies]
 test = [
     "pytest>=7.4.3",

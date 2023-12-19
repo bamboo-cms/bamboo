@@ -26,6 +26,7 @@ pdm serve
 You can create tables in the database by running:
 
 ```bash
+pdm drop-tables
 pdm create-tables
 ```
 

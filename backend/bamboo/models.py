@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, \
-    Boolean, DateTime, Float
+    Boolean, DateTime, Float, JSON
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -61,7 +61,7 @@ class Media(db.Model):
 class Site(db.Model):
     __tablename__ = 'site'
     id = Column(Integer, primary_key=True)
-    config = Column(Text)
+    config = Column(JSON)
     template_url = Column(String)
     deploy_target = Column(String)
     deploy_method = Column(String)
@@ -267,6 +267,7 @@ class ScheduleItem(db.Model):
 
 
 class Venue(db.Model):
+    __tablename__ = 'venue'
     id = Column(Integer, primary_key=True)
     name = Column(String(30))
     address = Column(String(500))

@@ -1,10 +1,10 @@
 from apiflask import APIFlask
 
-from bamboo.views.admin import admin_bp
-from bamboo.views.auth import auth_bp
-from bamboo.views.blog import blog_bp
-from bamboo.views.page import page_bp
-from bamboo.views.talk import talk_bp
+from bamboo.blueprints.admin import admin_bp
+from bamboo.blueprints.auth import auth_bp
+from bamboo.blueprints.blog import blog_bp
+from bamboo.blueprints.page import page_bp
+from bamboo.blueprints.talk import talk_bp
 from bamboo.core.extensions import db, migrate
 from bamboo.core.commands import register_commands
 from bamboo.settings import config

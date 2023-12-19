@@ -20,8 +20,8 @@ package-type = "application"
 
 [tool.pdm.scripts]
 serve = { shell = "flask run", help = "Run the development server" }
-create-tables = { shell = "cd backend && flask create-tables", help = "Create tables" }
-drop-tables = { shell = "cd backend && flask drop-tables", help = "Drop tables" }
+create-tables = { shell = "flask create-tables", help = "Create tables" }
+drop-tables = { shell = "flask drop-tables", help = "Drop tables" }
 
 [tool.pdm.dev-dependencies]
 test = [

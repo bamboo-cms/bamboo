@@ -1,29 +1,34 @@
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import Optional
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+import sqlalchemy as sa
+import sqlalchemy.orm as so
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from bamboo.core.extensions import db
 
 
-class User(db.Model):
-    __tablename__ = "user"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    username = Column(String)
-    password_hash = Column(String)
-    biology = Column(String)
-    introduction = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    active = Column(Boolean)
-    profile_image_id = Column(Integer, ForeignKey("media.id"))
-    role_id = Column(String, ForeignKey("role.id"))
+def now():
+    return datetime.now(UTC)
 
-    profile_image = relationship("Media", foreign_keys=[profile_image_id])
-    role = relationship("Role", back_populates="users")
-    blog_authors = relationship("BlogAuthor", back_populates="author", cascade="all, delete-orphan")
+
+class User(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str]
+    username: so.Mapped[Optional[str]]
+    password_hash: so.Mapped[Optional[str]]
+    bio: so.Mapped[Optional[str]]
+    introduction: so.Mapped[Optional[str]]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    active: so.Mapped[bool] = so.mapped_column(default=False)
+    profile_image_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
+    role_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("role.id"), index=True)
+    profile_image: so.Mapped["Media"] = so.relationship(foreign_keys=[profile_image_id])
+    role: so.Mapped["Role"] = so.relationship(back_populates="users")
+    blog_authors: so.WriteOnlyMapped["BlogAuthor"] = so.relationship(
+        back_populates="author", cascade="all, delete-orphan"
+    )
 
     @property
     def password(self):
@@ -38,251 +43,220 @@ class User(db.Model):
 
 
 class Role(db.Model):
-    __tablename__ = "role"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    permissions = Column(Integer)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    users = relationship("User", back_populates="role")
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str]
+    permissions: so.Mapped[int]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    users: so.WriteOnlyMapped["User"] = so.relationship(back_populates="role")
 
 
 class Media(db.Model):
-    __tablename__ = "media"
-    id = Column(Integer, primary_key=True)
-    path = Column(String)
-    content_type = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    path: so.Mapped[str]
+    content_type: so.Mapped[str]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
 
 
 class Site(db.Model):
-    __tablename__ = "site"
-    id = Column(Integer, primary_key=True)
-    config = Column(JSON)
-    template_url = Column(String)
-    deploy_target = Column(String)
-    deploy_method = Column(String)
-    deploy_secret = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    pages = relationship("Page", back_populates="site")
-    notifications = relationship("Notification", back_populates="site")
-    volunteer_forms = relationship("VolunteerForm", back_populates="site")
-    sponsor_forms = relationship("SponsorForm", back_populates="site")
-    speaker_forms = relationship("SpeakerForm", back_populates="site")
-    talks = relationship("Talk", back_populates="site")
-    blogs = relationship("Blog", back_populates="site")
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    config: so.Mapped[dict] = so.mapped_column(type_=sa.JSON)
+    template_url: so.Mapped[Optional[str]]
+    deploy_target: so.Mapped[Optional[str]]
+    deploy_method: so.Mapped[Optional[str]]
+    deploy_secret: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    pages: so.WriteOnlyMapped["Page"] = so.relationship(back_populates="site")
+    notifications: so.WriteOnlyMapped["Notification"] = so.relationship(back_populates="site")
+    volunteer_forms: so.WriteOnlyMapped["VolunteerForm"] = so.relationship(back_populates="site")
+    sponsor_forms: so.WriteOnlyMapped["SponsorForm"] = so.relationship(back_populates="site")
+    speaker_forms: so.WriteOnlyMapped["SpeakerForm"] = so.relationship(back_populates="site")
+    talks: so.WriteOnlyMapped["Talk"] = so.relationship(back_populates="site")
+    blogs: so.WriteOnlyMapped["Blog"] = so.relationship(back_populates="site")
 
 
 class Page(db.Model):
-    __tablename__ = "page"
-    id = Column(Integer, primary_key=True)
-    title = Column(String)
-    path = Column(String)
-    content = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    site_id = Column(Integer, ForeignKey("site.id"))
-
-    site = relationship("Site", back_populates="pages")
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    title: so.Mapped[str]
+    path: so.Mapped[str]
+    content: so.Mapped[str] = so.mapped_column(sa.Text)
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site: so.Mapped["Site"] = so.relationship(back_populates="pages")
 
 
 class Notification(db.Model):
-    __tablename__ = "notification"
-    id = Column(Integer, primary_key=True)
-    content = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    site_id = Column(Integer, ForeignKey("site.id"))
-
-    site = relationship("Site", back_populates="notifications")
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    content: so.Mapped[str] = so.mapped_column(sa.Text)
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site: so.Mapped["Site"] = so.relationship(back_populates="notifications")
 
 
 class VolunteerForm(db.Model):
-    __tablename__ = "volunteer_form"
-    id = Column(Integer, primary_key=True)
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
     # ...
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    site_id = Column(Integer, ForeignKey("site.id"))
-
-    site = relationship("Site", back_populates="volunteer_forms")
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site: so.Mapped["Site"] = so.relationship(back_populates="volunteer_forms")
 
 
 class SponsorForm(db.Model):
-    __tablename__ = "sponsor_form"
-    id = Column(Integer, primary_key=True)
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
     # ...
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    site_id = Column(Integer, ForeignKey("site.id"))
-
-    site = relationship("Site", back_populates="sponsor_forms")
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site: so.Mapped["Site"] = so.relationship(back_populates="sponsor_forms")
 
 
 class SpeakerForm(db.Model):
-    __tablename__ = "speaker_form"
-    id = Column(Integer, primary_key=True)
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
     # ...
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    site_id = Column(Integer, ForeignKey("site.id"))
-
-    site = relationship("Site", back_populates="speaker_forms")
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site: so.Mapped["Site"] = so.relationship(back_populates="speaker_forms")
 
 
 class Talk(db.Model):
-    __tablename__ = "talk"
-    id = Column(Integer, primary_key=True)
-    title = Column(String)
-    content = Column(String)
-    video_url = Column(String)
-    slides_url = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    slides_id = Column(Integer, ForeignKey("media.id"))
-    site_id = Column(Integer, ForeignKey("site.id"))
-
-    slides = relationship("Media", foreign_keys=[slides_id])
-    site = relationship("Site", back_populates="talks")
-    schedule_items = relationship(
-        "ScheduleItem", back_populates="talk", cascade="all, delete-orphan"
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    title: so.Mapped[str]
+    content: so.Mapped[str]
+    video_url: so.Mapped[Optional[str]]
+    slides_url: so.Mapped[Optional[str]]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    slides_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
+    slides: so.Mapped["Media"] = so.relationship(foreign_keys=[slides_id])
+    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site: so.Mapped["Site"] = so.relationship(back_populates="talks")
+    schedule_items: so.WriteOnlyMapped["ScheduleItem"] = so.relationship(
+        back_populates="talk", uselist=False, cascade="all, delete-orphan"
     )
-    talk_categories = relationship(
-        "TalkCategory", back_populates="talk", cascade="all, delete-orphan"
+    talk_categories: so.WriteOnlyMapped["TalkCategory"] = so.relationship(
+        back_populates="talk", cascade="all, delete-orphan"
     )
 
 
 class Category(db.Model):
-    __tablename__ = "category"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    talk_categories = relationship(
-        "TalkCategory", back_populates="category", cascade="all, delete-orphan"
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    talk_categories: so.WriteOnlyMapped["TalkCategory"] = so.relationship(
+        back_populates="category", cascade="all, delete-orphan"
     )
 
 
 class TalkCategory(db.Model):
-    __tablename__ = "talk_category"
-    talk_id = Column(Integer, ForeignKey("talk.id"), primary_key=True)
-    category_id = Column(Integer, ForeignKey("category.id"), primary_key=True)
-
-    talk = relationship("Talk", back_populates="talk_categories")
-    category = relationship("Category", back_populates="talk_categories")
+    talk_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("talk.id"), primary_key=True)
+    category_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("category.id"), primary_key=True)
+    talk: so.Mapped["Talk"] = so.relationship(back_populates="talk_categories")
+    category: so.Mapped["Category"] = so.relationship(back_populates="talk_categories")
 
 
 class Staff(db.Model):
-    __tablename__ = "staff"
-    id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    city_id = Column(Integer, ForeignKey("city.id"))
-    staff_id = Column(Integer, ForeignKey("user.id"))
-
-    city = relationship("City", back_populates="staffs")
-    staff = relationship("User", foreign_keys=[staff_id])
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), primary_key=True)
+    staff_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), primary_key=True)
+    city: so.Mapped["City"] = so.relationship(back_populates="staffs")
+    staff: so.Mapped["User"] = so.relationship(foreign_keys=[staff_id])
+    category: so.Mapped[str]
 
 
 class City(db.Model):
-    __tablename__ = "city"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    address = Column(String)
-    latitude = Column(Float)
-    longitude = Column(Float)
-    start = Column(DateTime)
-    end = Column(DateTime)
-    registration_url = Column(String)
-    live_urls = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    site_id = Column(Integer, ForeignKey("site.id"))
-
-    staffs = relationship("Staff", back_populates="city")
-    venues = relationship("Venue", back_populates="city")
-    partnerships = relationship("Partership", back_populates="city", cascade="all, delete-orphan")
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str]
+    address: so.Mapped[str]
+    latitude: so.Mapped[float]
+    longitude: so.Mapped[float]
+    start: so.Mapped[datetime]
+    end: so.Mapped[datetime]
+    registration_url: so.Mapped[str]
+    live_urls: so.Mapped[str]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    staffs: so.WriteOnlyMapped["Staff"] = so.relationship(back_populates="city")
+    venues: so.WriteOnlyMapped["Venue"] = so.relationship(back_populates="city")
+    partnerships: so.WriteOnlyMapped["Partership"] = so.relationship(
+        back_populates="city", cascade="all, delete-orphan"
+    )
 
 
 class Partership(db.Model):
-    __tablename__ = "partnership"
-    city_id = Column(Integer, ForeignKey("city.id"), primary_key=True)
-    organization_id = Column(Integer, ForeignKey("organization.id"), primary_key=True)
-    category = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    city = relationship("City", back_populates="partnerships")
-    organization = relationship("Organization", back_populates="partnerships")
+    city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), primary_key=True)
+    organization_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("organization.id"), primary_key=True
+    )
+    category: so.Mapped[str]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    city: so.Mapped["City"] = so.relationship(back_populates="partnerships")
+    organization: so.Mapped["Organization"] = so.relationship(back_populates="partnerships")
 
 
 class Organization(db.Model):
-    __tablename__ = "organization"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    url = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    profile_image_id = Column(Integer, ForeignKey("media.id"))
-
-    profile_image = relationship("Media", foreign_keys=[profile_image_id])
-    partnerships = relationship(
-        "Partership", back_populates="organization", cascade="all, delete-orphan"
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str]
+    url: so.Mapped[str]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    profile_image_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
+    profile_image: so.Mapped["Media"] = so.relationship(foreign_keys=[profile_image_id])
+    partnerships: so.WriteOnlyMapped["Partership"] = so.relationship(
+        back_populates="organization", cascade="all, delete-orphan"
     )
 
 
 class Blog(db.Model):
-    __tablename__ = "blog"
-    id = Column(Integer, primary_key=True)
-    title = Column(String)
-    path = Column(String)
-    content = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    site_id = Column(Integer, db.ForeignKey("site.id"))
-
-    site = relationship("Site", back_populates="blogs")
-    blog_authors = relationship("BlogAuthor", back_populates="blog", cascade="all, delete-orphan")
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    title: so.Mapped[str]
+    path: so.Mapped[str]
+    content: so.Mapped[str] = so.mapped_column(sa.Text)
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site: so.Mapped["Site"] = so.relationship(back_populates="blogs")
+    blog_authors: so.WriteOnlyMapped["BlogAuthor"] = so.relationship(
+        back_populates="blog", cascade="all, delete-orphan"
+    )
 
 
 class BlogAuthor(db.Model):
-    __tablename__ = "blog_author"
-    blog_id = Column(Integer, ForeignKey("blog.id"), primary_key=True)
-    author_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
-
-    blog = relationship("Blog", back_populates="blog_authors")
-    author = relationship("User", back_populates="blog_authors")
+    blog_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("blog.id"), primary_key=True)
+    author_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), primary_key=True)
+    blog: so.Mapped["Blog"] = so.relationship(back_populates="blog_authors")
+    author: so.Mapped["User"] = so.relationship(back_populates="blog_authors")
 
 
 class ScheduleItem(db.Model):
-    __tablename__ = "schedule_item"
-    venue_id = Column(Integer, ForeignKey("venue.id"), primary_key=True)
-    talk_id = Column(Integer, ForeignKey("talk.id"), primary_key=True)
-    content = Column(Text)
-    start = Column(DateTime)
-    end = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    venue = relationship("Venue", back_populates="schedule_items")
-    talk = relationship("Talk", back_populates="schedule_items")
+    venue_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("venue.id"), primary_key=True)
+    talk_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey("talk.id"), primary_key=True)
+    content: so.Mapped[str] = so.mapped_column(sa.Text)
+    start: so.Mapped[datetime]
+    end: so.Mapped[datetime]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    venue: so.Mapped["Venue"] = so.relationship(back_populates="schedule_items")
+    talk: so.Mapped["Talk"] = so.relationship(back_populates="schedule_items")
 
 
 class Venue(db.Model):
-    __tablename__ = "venue"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(30))
-    address = Column(String(500))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    city_id = Column(Integer, ForeignKey("city.id"))
-
-    city = relationship("City", back_populates="venues")
-    schedule_items = relationship(
-        "ScheduleItem", back_populates="venue", cascade="all, delete-orphan"
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str]
+    address: so.Mapped[str]
+    created_at: so.Mapped[datetime] = so.mapped_column(default=now)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=now, onupdate=now)
+    city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), index=True)
+    city: so.Mapped["City"] = so.relationship(back_populates="venues")
+    schedule_items: so.WriteOnlyMapped["ScheduleItem"] = so.relationship(
+        back_populates="venue", cascade="all, delete-orphan"
     )

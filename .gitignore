@@ -161,3 +161,7 @@ cython_debug/
 
 .pdm-python
 *.db
+
+# media storage
+/media/*
+!/media/.gitkeep

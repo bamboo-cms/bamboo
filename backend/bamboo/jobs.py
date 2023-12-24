@@ -1,13 +1,15 @@
 from pathlib import Path
 
-from flask import current_app
+from flask import current_app, Flask
 from PIL import Image
 
-from bamboo.core.extensions import rq
+from flask_rq2 import RQ
+
+rq = RQ()
 
 
 @rq.job
-def gen_small_image(filename: str):
+def gen_small_image(filename: str) -> None:
     """Generate a small image from the given image."""
     media_dir = Path(current_app.config["BAMBOO_MEDIA_DIR"])
     small_suffix = current_app.config["BAMBOO_SMALL_IMAGE_SUFFIX"]
@@ -20,3 +22,7 @@ def gen_small_image(filename: str):
         small_height = int(height * small_ratio)
         with image.resize((small_width, small_height)) as small_image:
             small_image.save(small_image_path)
+
+
+def init_app(app: Flask) -> None:
+    rq.init_app(app)

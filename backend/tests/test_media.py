@@ -3,9 +3,11 @@ from pathlib import Path
 
 from PIL import Image
 
+from bamboo.database import db
 
-def test_upload_media(app, client, runner, mocker):
-    runner.invoke(args=["create-tables"])
+
+def test_upload_media(app, client, mocker):
+    db.create_all()
     mocked_function = mocker.patch("bamboo.jobs.gen_small_image.queue", autospec=True)
     mocker.patch(
         "bamboo.blueprints.media.gen_uuid",

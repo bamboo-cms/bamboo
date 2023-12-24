@@ -1,30 +1,24 @@
-import uuid
 from pathlib import Path
 
 from apiflask import APIBlueprint
 from flask import current_app
 
-from bamboo.core.extensions import db
+from bamboo.database import db
 from bamboo.forms.media import MediaContentType, MediaForm
 from bamboo.jobs import gen_small_image
-from bamboo.models import Media
+from bamboo.database.models import Media
+from bamboo.utils import gen_uuid
 
 media_bp = APIBlueprint("media", __name__)
 
 
-def gen_uuid() -> str:
-    """Generate a uuid hex string."""
-    return str(uuid.uuid4().hex)
-
-
-# upload media
 @media_bp.post("/")
 def upload_media():
     media_dir = Path(current_app.config["BAMBOO_MEDIA_DIR"])
     form = MediaForm()
     if not form.validate_on_submit():
         return form.errors, 400
-    media = Media(content_type=form.content_type.data)
+    media = Media(content_type=form.content_type.data, path="")
     db.session.add(media)
     # flush to get id
     db.session.flush()

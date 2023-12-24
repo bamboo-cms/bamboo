@@ -13,7 +13,7 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}    # MySQL root user password
       - MYSQL_DATABASE=${MYSQL_DATABASE}
     volumes:
-      - ${MySQL_PATH}:/var/lib/mysql 
+      - ${MySQL_PATH}:/var/lib/mysql
     ports:
       - "${MYSQL_PORT}:3306"                          # mapping 3306 port
     networks:

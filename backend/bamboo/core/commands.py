@@ -1,16 +1,23 @@
 import click
+from flask import Flask
 
-from bamboo import models  # noqa: F401
-from bamboo.core.extensions import db
+from bamboo.database import db
 
 
-def register_commands(app):
-    @app.cli.command(name="create-tables")
-    def create_tables():
-        db.create_all()
-        click.echo("Tables created")
+@click.command(name="create-tables")
+def create_tables() -> None:
+    """Create all tables."""
+    db.create_all()
+    click.echo("Tables created")
 
-    @app.cli.command(name="drop-tables")
-    def drop_tables():
-        db.drop_all()
-        click.echo("Tables dropped")
+
+@click.command(name="drop-tables")
+def drop_tables() -> None:
+    """Drop all tables."""
+    db.drop_all()
+    click.echo("Tables dropped")
+
+
+def init_app(app: Flask) -> None:
+    app.cli.add_command(create_tables)
+    app.cli.add_command(drop_tables)

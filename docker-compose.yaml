@@ -1,27 +1,27 @@
 networks:
-  devNetwork:
+  innerNetwork:
     driver: ${NETWORKS_DRIVER}
 
 services:
-  mysql:
+  database:
     image: mysql:8.0
     privileged: true
     environment:
       - TZ=${TZ}
-      - MYSQL_USER=${MYSQL_USERNAME}                  # MySQL username
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}              # MySQL user password
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}    # MySQL root user password
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${DATABASE_USERNAME}                  # MySQL username
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD}              # MySQL user password
+      - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}    # MySQL root user password
+      - MYSQL_DATABASE=${DATABASE_NAME}
     volumes:
-      - ${MySQL_PATH}:/var/lib/mysql
+      - ${DATABASE_PATH}:/var/lib/mysql
     ports:
-      - "${MYSQL_PORT}:3306"                          # mapping 3306 port
+      - "${DATABASE_PORT}:3306"                          # mapping 3306 port
     networks:
-      - devNetwork
+      - innerNetwork
     deploy:
       resources:
         limits:
-          memory: ${LIMIT_MEMORY_MYSQL}
+          memory: ${LIMIT_MEMORY_DATABASE}
     restart: always
 
   redis:
@@ -34,7 +34,7 @@ services:
     ports:
       - "${REDIS_PORT}:6379"                          # mapping 6379 port
     networks:
-      - devNetwork
+      - innerNetwork
     deploy:
       resources:
         limits:

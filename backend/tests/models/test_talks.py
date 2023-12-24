@@ -11,7 +11,7 @@ def test_talk_category():
     talk.categories.add_all([keynote, act])
     db.session.add_all([site, keynote, act, talk])
     db.session.commit()
-    assert set(models.Category.query.filter(models.Category.talks.contains(talk)).all()) == {
+    assert set(talk.categories.all()) == {
         keynote,
         act,
     }

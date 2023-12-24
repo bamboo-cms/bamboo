@@ -18,7 +18,25 @@ class Base(db.Model):
     updated_at: so.Mapped[datetime] = so.mapped_column(default=func.now(), onupdate=func.now())
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} id={self.id}>"
+        attrs = {"id": self.id}
+        if hasattr(self, "name"):
+            attrs["name"] = self.name
+        if hasattr(self, "title"):
+            attrs["title"] = self.title
+        return "<{} {}>".format(
+            self.__class__.__name__, ",".join(f"{k}={v!r}" for k, v in attrs.items())
+        )
+
+
+blog_author = db.Table(
+    "blog_author",
+    sa.Column(
+        "blog_id", sa.Integer, sa.ForeignKey("blog.id", ondelete="CASCADE"), primary_key=True
+    ),
+    sa.Column(
+        "author_id", sa.Integer, sa.ForeignKey("user.id", ondelete="CASCADE"), primary_key=True
+    ),
+)
 
 
 class User(Base):
@@ -33,8 +51,8 @@ class User(Base):
     role_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey("role.id"), index=True)
     profile_image: so.Mapped["Media"] = so.relationship(foreign_keys=[profile_image_id])
     role: so.Mapped["Role"] = so.relationship(back_populates="users")
-    blog_authors: so.WriteOnlyMapped["BlogAuthor"] = so.relationship(
-        back_populates="author", cascade="all, delete-orphan"
+    blogs: so.WriteOnlyMapped["Blog"] = so.relationship(
+        back_populates="authors", secondary=blog_author, passive_deletes=True
     )
 
     @property
@@ -135,7 +153,7 @@ class Talk(Base):
     schedule_item: so.Mapped[Optional["ScheduleItem"]] = so.relationship(
         back_populates="talk", uselist=False, cascade="all, delete-orphan"
     )
-    categories: so.WriteOnlyMapped["Category"] = so.relationship(
+    categories: so.DynamicMapped["Category"] = so.relationship(
         secondary=talk_category, back_populates="talks", passive_deletes=True
     )
 
@@ -168,9 +186,9 @@ class City(Base):
     live_urls: so.Mapped[Optional[str]]
     site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
     site: so.Mapped["Site"] = so.relationship(back_populates="cities")
-    staffs: so.WriteOnlyMapped["Staff"] = so.relationship(back_populates="city")
-    venues: so.WriteOnlyMapped["Venue"] = so.relationship(back_populates="city")
-    partnerships: so.WriteOnlyMapped["Partership"] = so.relationship(
+    staffs: so.DynamicMapped["Staff"] = so.relationship(back_populates="city")
+    venues: so.DynamicMapped["Venue"] = so.relationship(back_populates="city")
+    partnerships: so.DynamicMapped["Partership"] = so.relationship(
         back_populates="city", cascade="all, delete-orphan"
     )
 
@@ -203,16 +221,9 @@ class Blog(Base):
     content: so.Mapped[str] = so.mapped_column(sa.Text)
     site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
     site: so.Mapped["Site"] = so.relationship(back_populates="blogs")
-    blog_authors: so.WriteOnlyMapped["BlogAuthor"] = so.relationship(
-        back_populates="blog", cascade="all, delete-orphan"
+    authors: so.DynamicMapped["User"] = so.relationship(
+        back_populates="blogs", passive_deletes=True, secondary=blog_author
     )
-
-
-class BlogAuthor(db.Model):
-    blog_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("blog.id"), primary_key=True)
-    author_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), primary_key=True)
-    blog: so.Mapped["Blog"] = so.relationship(back_populates="blog_authors")
-    author: so.Mapped["User"] = so.relationship(back_populates="blog_authors")
 
 
 class ScheduleItem(Base):
@@ -230,6 +241,6 @@ class Venue(Base):
     address: so.Mapped[str]
     city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), index=True)
     city: so.Mapped["City"] = so.relationship(back_populates="venues")
-    schedule_items: so.WriteOnlyMapped["ScheduleItem"] = so.relationship(
+    schedule_items: so.DynamicMapped["ScheduleItem"] = so.relationship(
         back_populates="venue", cascade="all, delete-orphan"
     )

@@ -1,6 +1,6 @@
 from apiflask import APIFlask
-from backend.bamboo import blueprints, database
 
+from bamboo import blueprints, database
 from bamboo.core import commands
 from bamboo.settings import config
 

@@ -3,9 +3,9 @@ from apiflask import APIFlask
 from bamboo.blueprints.admin import admin_bp
 from bamboo.blueprints.auth import auth_bp
 from bamboo.blueprints.blog import blog_bp
+from bamboo.blueprints.media import media_bp
 from bamboo.blueprints.page import page_bp
 from bamboo.blueprints.talk import talk_bp
-from bamboo.blueprints.media import media_bp
 
 
 def init_app(app: APIFlask) -> None:

@@ -4,9 +4,9 @@ from apiflask import APIBlueprint
 from flask import current_app
 
 from bamboo.database import db
+from bamboo.database.models import Media
 from bamboo.forms.media import MediaContentType, MediaForm
 from bamboo.jobs import gen_small_image
-from bamboo.database.models import Media
 from bamboo.utils import gen_uuid
 
 media_bp = APIBlueprint("media", __name__)

@@ -1,9 +1,8 @@
 from pathlib import Path
 
-from flask import current_app, Flask
-from PIL import Image
-
+from flask import Flask, current_app
 from flask_rq2 import RQ
+from PIL import Image
 
 rq = RQ()
 

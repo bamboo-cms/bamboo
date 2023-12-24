@@ -1,9 +1,8 @@
 import io
 from pathlib import Path
 
-from PIL import Image
-
 from bamboo.database import db
+from PIL import Image
 
 
 def test_upload_media(app, client, mocker):

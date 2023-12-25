@@ -8,22 +8,21 @@ services:
       context: ./backend
       dockerfile: ./docker/backend/Dockerfile`
     environment:
-      DATABASE_URL: mysql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@database:3306/${DATABASE_NAME}
+      DATABASE_URL: postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}
       # todo ...
 
   database:
-    image: mysql:8.0
+    image: postgres:16
     privileged: true
     environment:
       - TZ=${TZ}
-      - MYSQL_USER=${DATABASE_USERNAME}                  # MySQL username
-      - MYSQL_PASSWORD=${DATABASE_PASSWORD}              # MySQL user password
-      - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}    # MySQL root user password
-      - MYSQL_DATABASE=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
     volumes:
-      - ${DATABASE_PATH}:/var/lib/mysql
+      - ${DATABASE_PATH}:/var/lib/postgresql/data
     ports:
-      - "${DATABASE_PORT}:3306"                          # mapping 3306 port
+      - "${DATABASE_PORT}:5432"
     networks:
       - innerNetwork
     deploy:
@@ -40,7 +39,7 @@ services:
     volumes:
       - ${REDIS_PATH}:/data
     ports:
-      - "${REDIS_PORT}:6379"                          # mapping 6379 port
+      - "${REDIS_PORT}:6379"
     networks:
       - innerNetwork
     deploy:

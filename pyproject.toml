@@ -13,7 +13,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "Flask-RQ2>=18.3",
     "Pillow>=10.1.0",
-    "flask-wtf>=1.2.1",
+    "setuptools>=69.0.3",
 ]
 requires-python = ">=3.12"
 license = {text = "BSD 3-Clause"}

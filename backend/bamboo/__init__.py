@@ -1,7 +1,6 @@
 from apiflask import APIFlask
 
 from bamboo import blueprints, database
-from bamboo.core import commands
 from bamboo.settings import config
 
 
@@ -13,6 +12,4 @@ def create_app(config_name: str) -> APIFlask:
     blueprints.init_app(app)
     # database
     database.init_app(app)
-    # commands
-    commands.init_app(app)
     return app

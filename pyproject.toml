@@ -11,6 +11,7 @@ dependencies = [
     "flask-sqlalchemy>=3.1.1",
     "flask-migrate>=4.0.5",
     "python-dotenv>=1.0.0",
+    "python-jose[cryptography]>=3.3.0",
 ]
 requires-python = ">=3.12"
 license = {text = "BSD 3-Clause"}

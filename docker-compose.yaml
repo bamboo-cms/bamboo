@@ -3,6 +3,14 @@ networks:
     driver: ${NETWORKS_DRIVER}
 
 services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ./docker/backend/Dockerfile`
+    environment:
+      DATABASE_URL: mysql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@database:3306/${DATABASE_NAME}
+      # todo ...
+
   database:
     image: mysql:8.0
     privileged: true

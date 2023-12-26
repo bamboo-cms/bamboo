@@ -15,7 +15,7 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-def _encode_jwt(
+def encode_jwt(
     extra_claims: MutableMapping[str, Any],
     secret_key: str,
     token_type: str = "access",
@@ -73,7 +73,7 @@ def _encode_jwt(
     )
 
 
-def _decode_jwt(
+def decode_jwt(
     encoded_token: str,
     secret_key: str,
     algorithms: str | Container[str] = "HS256",

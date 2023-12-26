@@ -36,10 +36,28 @@ pdm drop-tables
 pdm create-tables
 ```
 
+Lint backend
+
+```bash
+pdm run pre-commit run --all-files
+```
+
+> [!TIP]
+> It's recommended to install the [pre-commit](https://pre-commit.com/) hook to automatically lint your code before committing:
+> ```bash
+> pdm run pre-commit install
+> ```
+
 Run the frontend development server (need to install [pnpm](https://pnpm.io/)):
 
 ```bash
 cd frontend
 pnpm install
 pnpm dev
+```
+
+Lint frontend
+
+```bash
+pnpm run lint
 ```

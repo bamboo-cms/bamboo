@@ -30,7 +30,7 @@ def _encode_jwt(
     """Create a JWT.
 
     Args:
-        extra_claims: _description_
+        extra_claims: The custom claims to include in JWT.
         secret_key: The secret key for JWT.
         token_type: The type of JWT.("access" or "refresh")
         expires_delta: The duration of JWT.

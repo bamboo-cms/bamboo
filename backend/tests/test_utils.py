@@ -1,17 +1,17 @@
 from datetime import timedelta
 
 import pytest
-from bamboo.utils import _decode_jwt, _encode_jwt
+from bamboo.utils import decode_jwt, encode_jwt
 from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
 
 
 def test_simple_jwt():
-    encoded_token = _encode_jwt(
+    encoded_token = encode_jwt(
         extra_claims={"username": "bamboo"},
         secret_key="bamboo",
     )
 
-    decoded_token = _decode_jwt(encoded_token=encoded_token, secret_key="bamboo")
+    decoded_token = decode_jwt(encoded_token=encoded_token, secret_key="bamboo")
 
     assert decoded_token["username"] == "bamboo"
     assert decoded_token["type"] == "access"
@@ -24,7 +24,7 @@ def test_simple_jwt():
 
 
 def test_jwt():
-    encoded_token = _encode_jwt(
+    encoded_token = encode_jwt(
         extra_claims={"username": "bamboo"},
         secret_key="bamboo",
         issuer="issuer",
@@ -34,7 +34,7 @@ def test_jwt():
         jti=True,
     )
 
-    decoded_token = _decode_jwt(
+    decoded_token = decode_jwt(
         encoded_token=encoded_token, secret_key="bamboo", audience="audience"
     )
 
@@ -49,28 +49,28 @@ def test_jwt():
     assert decoded_token["jti"] is not None
 
     with pytest.raises(JWTClaimsError, match="Invalid audience"):
-        _decode_jwt(
+        decode_jwt(
             encoded_token=encoded_token,
             secret_key="bamboo",
         )
 
 
 def test_expired_jwt():
-    encoded_token = _encode_jwt(
+    encoded_token = encode_jwt(
         extra_claims={"username": "bamboo"},
         secret_key="bamboo",
         expires_delta=timedelta(seconds=-1),
     )
 
     with pytest.raises(ExpiredSignatureError):
-        _decode_jwt(encoded_token=encoded_token, secret_key="bamboo")
+        decode_jwt(encoded_token=encoded_token, secret_key="bamboo")
 
 
 def test_invalid_jwt():
-    encoded_token = _encode_jwt(
+    encoded_token = encode_jwt(
         extra_claims={"username": "bamboo"},
         secret_key="bamboo",
     )
 
     with pytest.raises(JWTError):
-        _decode_jwt(encoded_token=encoded_token + "wrong suffix", secret_key="bamboo")
+        decode_jwt(encoded_token=encoded_token + "wrong suffix", secret_key="bamboo")

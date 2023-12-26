@@ -17,7 +17,6 @@ def test_upload_media(app, client, mocker):
     response = client.post(
         "/media/",
         data={
-            "content_type": "image",
             "file": (io.BytesIO(content), "test.png"),
         },
     )

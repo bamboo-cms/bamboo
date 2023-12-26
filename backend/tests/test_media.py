@@ -22,7 +22,7 @@ def test_upload_media(app, client, mocker):
     )
     assert response.status_code == 200, response.json
     assert response.json["id"] == 1
-    filename = "1_xxxxxxxx.png"
+    filename = "xxxxxxxx_test.png"
     # check mocked function called
     mocked_function.assert_called_once_with(filename)
     assert response.json["path"] == filename

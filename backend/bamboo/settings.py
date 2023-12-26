@@ -27,7 +27,7 @@ class ProductionConfig(BaseConfig):
     )
 
 
-config: dict[str, BaseConfig] = {
+config: dict[str, type[BaseConfig]] = {
     "development": DevelopmentConfig,
     "testing": TestingConfig,
     "production": ProductionConfig,

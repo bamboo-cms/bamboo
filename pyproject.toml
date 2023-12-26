@@ -50,3 +50,8 @@ target-version = "py312"
 
 [tool.ruff.mccabe]
 max-complexity = 10
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"

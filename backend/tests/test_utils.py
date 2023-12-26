@@ -7,7 +7,7 @@ from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
 
 def test_simple_jwt():
     encoded_token = encode_jwt(
-        extra_claims={"username": "bamboo"},
+        payload={"username": "bamboo"},
         secret_key="bamboo",
     )
 
@@ -25,7 +25,7 @@ def test_simple_jwt():
 
 def test_jwt():
     encoded_token = encode_jwt(
-        extra_claims={"username": "bamboo"},
+        payload={"username": "bamboo"},
         secret_key="bamboo",
         issuer="issuer",
         subject="subject",
@@ -57,7 +57,7 @@ def test_jwt():
 
 def test_expired_jwt():
     encoded_token = encode_jwt(
-        extra_claims={"username": "bamboo"},
+        payload={"username": "bamboo"},
         secret_key="bamboo",
         expires_delta=timedelta(seconds=-1),
     )
@@ -68,7 +68,7 @@ def test_expired_jwt():
 
 def test_invalid_jwt():
     encoded_token = encode_jwt(
-        extra_claims={"username": "bamboo"},
+        payload={"username": "bamboo"},
         secret_key="bamboo",
     )
 

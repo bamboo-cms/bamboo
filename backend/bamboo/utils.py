@@ -16,7 +16,7 @@ def utc_now() -> datetime:
 
 
 def encode_jwt(
-    extra_claims: MutableMapping[str, Any],
+    payload: MutableMapping[str, Any],
     secret_key: str,
     token_type: str = "access",
     expires_delta: timedelta = timedelta(minutes=30),
@@ -30,7 +30,7 @@ def encode_jwt(
     """Create a JWT.
 
     Args:
-        extra_claims: The custom claims to include in JWT.
+        payload: The custom claims to include in JWT.
         secret_key: The secret key for JWT.
         token_type: The type of JWT.("access" or "refresh")
         expires_delta: The duration of JWT.
@@ -63,8 +63,8 @@ def encode_jwt(
     if jti:
         claims["jti"] = str(uuid.uuid4())
 
-    if extra_claims:
-        claims.update(extra_claims)
+    if payload:
+        claims.update(payload)
 
     return jwt.encode(
         claims=claims,

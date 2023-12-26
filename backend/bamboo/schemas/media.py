@@ -12,5 +12,5 @@ class MediaSchema(Schema):
         validate=[
             FileType(IMAGE_SUFFIXES | SLIDES_SUFFIXES),
             FileSize(max="50 MB"),
-        ]
+        ],
     )

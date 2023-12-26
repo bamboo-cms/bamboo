@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-from typing import Type
 
 basedir = Path(__file__).resolve().parent.parent.parent
 
@@ -34,7 +33,7 @@ class ProductionConfig(BaseConfig):
     RQ_REDIS_URL = os.getenv("RQ_REDIS_URL", "redis://redis:6379/0")
 
 
-config: dict[str, Type[BaseConfig]] = {
+config: dict[str, type[BaseConfig]] = {
     "development": DevelopmentConfig,
     "testing": TestingConfig,
     "production": ProductionConfig,

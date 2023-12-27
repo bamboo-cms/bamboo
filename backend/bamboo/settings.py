@@ -17,7 +17,7 @@ class BaseConfig:
 
 
 class DevelopmentConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = prefix + str(basedir / "database" / "data-dev.db")
+    SQLALCHEMY_DATABASE_URI = prefix + str(basedir / "data" / "data-dev.db")
 
 
 class TestingConfig(BaseConfig):
@@ -27,10 +27,8 @@ class TestingConfig(BaseConfig):
 
 
 class ProductionConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL", prefix + str(basedir / "database" / "data.db")
-    )
     RQ_REDIS_URL = os.getenv("RQ_REDIS_URL", "redis://redis:6379/0")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", prefix + str(basedir / "data" / "data.db"))
 
 
 config: dict[str, type[BaseConfig]] = {

@@ -13,7 +13,7 @@ class BaseConfig:
 
 
 class DevelopmentConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = prefix + str(basedir / "database" / "data-dev.db")
+    SQLALCHEMY_DATABASE_URI = prefix + str(basedir / "data" / "data-dev.db")
 
 
 class TestingConfig(BaseConfig):
@@ -22,12 +22,10 @@ class TestingConfig(BaseConfig):
 
 
 class ProductionConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL", prefix + str(basedir / "database" / "data.db")
-    )
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", prefix + str(basedir / "data" / "data.db"))
 
 
-config: dict[str, BaseConfig] = {
+config: dict[str, type[BaseConfig]] = {
     "development": DevelopmentConfig,
     "testing": TestingConfig,
     "production": ProductionConfig,

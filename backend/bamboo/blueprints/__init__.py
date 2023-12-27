@@ -1,15 +1,17 @@
 from apiflask import APIFlask
 
-from bamboo.blueprints.admin import admin_bp
-from bamboo.blueprints.auth import auth_bp
-from bamboo.blueprints.blog import blog_bp
-from bamboo.blueprints.page import page_bp
-from bamboo.blueprints.talk import talk_bp
+from bamboo.blueprints.admin import admin
+from bamboo.blueprints.auth import auth
+from bamboo.blueprints.blog import blog
+from bamboo.blueprints.command import command
+from bamboo.blueprints.page import page
+from bamboo.blueprints.talk import talk
 
 
 def init_app(app: APIFlask) -> None:
-    app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(auth_bp, url_prefix="/auth")
-    app.register_blueprint(blog_bp, url_prefix="/blog")
-    app.register_blueprint(page_bp, url_prefix="/page")
-    app.register_blueprint(talk_bp, url_prefix="/talk")
+    app.register_blueprint(command)
+    app.register_blueprint(admin, url_prefix="/admin")
+    app.register_blueprint(auth, url_prefix="/auth")
+    app.register_blueprint(blog, url_prefix="/blog")
+    app.register_blueprint(page, url_prefix="/page")
+    app.register_blueprint(talk, url_prefix="/talk")

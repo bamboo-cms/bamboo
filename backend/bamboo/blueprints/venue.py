@@ -1,4 +1,5 @@
 from apiflask import APIBlueprint
+
 from bamboo.database import db
 from bamboo.database.models import Venue
 from bamboo.schemas.venue import VenueIn, VenueOut

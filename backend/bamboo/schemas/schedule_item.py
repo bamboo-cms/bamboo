@@ -1,5 +1,5 @@
 from apiflask import Schema
-from apiflask.fields import Integer, String, DateTime
+from apiflask.fields import DateTime, Integer, String
 from apiflask.validators import Length
 
 

@@ -1,4 +1,5 @@
 from apiflask import APIBlueprint
+
 from bamboo.database import db
 from bamboo.database.models import ScheduleItem
 from bamboo.schemas.schedule_item import ScheduleItemIn, ScheduleItemOut

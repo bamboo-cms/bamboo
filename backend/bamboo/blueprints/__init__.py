@@ -6,9 +6,9 @@ from bamboo.blueprints.blog import blog
 from bamboo.blueprints.command import command
 from bamboo.blueprints.error import error
 from bamboo.blueprints.page import page
+from bamboo.blueprints.schedule_item import schedule_item
 from bamboo.blueprints.talk import talk
 from bamboo.blueprints.venue import venue
-from bamboo.blueprints.schedule_item import schedule_item
 
 
 def init_app(app: APIFlask) -> None:

@@ -96,14 +96,22 @@ class Site(Base):
     deploy_target: so.Mapped[Optional[str]]
     deploy_method: so.Mapped[Optional[str]]
     deploy_secret: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
-    pages: so.WriteOnlyMapped["Page"] = so.relationship(back_populates="site")
-    notifications: so.WriteOnlyMapped["Notification"] = so.relationship(back_populates="site")
-    volunteer_forms: so.WriteOnlyMapped["VolunteerForm"] = so.relationship(back_populates="site")
-    sponsor_forms: so.WriteOnlyMapped["SponsorForm"] = so.relationship(back_populates="site")
-    speaker_forms: so.WriteOnlyMapped["SpeakerForm"] = so.relationship(back_populates="site")
-    talks: so.WriteOnlyMapped["Talk"] = so.relationship(back_populates="site")
-    blogs: so.WriteOnlyMapped["Blog"] = so.relationship(back_populates="site")
-    cities: so.WriteOnlyMapped["City"] = so.relationship(back_populates="site")
+    pages: so.Mapped["Page"] = so.relationship(back_populates="site", passive_deletes=True)
+    notifications: so.Mapped["Notification"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    volunteer_forms: so.Mapped["VolunteerForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    sponsor_forms: so.Mapped["SponsorForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    speaker_forms: so.Mapped["SpeakerForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    talks: so.Mapped["Talk"] = so.relationship(back_populates="site", cascade="all, delete-orphan")
+    blogs: so.Mapped["Blog"] = so.relationship(back_populates="site", cascade="all, delete-orphan")
+    cities: so.Mapped["City"] = so.relationship(back_populates="site", cascade="all, delete-orphan")
 
 
 class Page(Base):

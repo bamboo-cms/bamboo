@@ -1,3 +1,3 @@
 from apiflask import APIBlueprint
 
-talk_bp = APIBlueprint("talk", __name__)
+talk = APIBlueprint("talk", __name__)

@@ -1,16 +1,25 @@
 from datetime import datetime
-from typing import NoReturn, Optional
+from typing import TYPE_CHECKING, NoReturn, Optional
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy.model import Model
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
+if TYPE_CHECKING:
+
+    class BaseModel(Model, so.DeclarativeBase):
+        """A dummy BaseModel class for type checking"""
+
+        pass
+else:
+    BaseModel = db.Model
 
 
-class Base(db.Model):
+class Base(BaseModel):
     __abstract__ = True
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -20,9 +29,9 @@ class Base(db.Model):
     def __repr__(self):
         attrs = {"id": self.id}
         if hasattr(self, "name"):
-            attrs["name"] = self.name
+            attrs["name"] = self.name  # pyright: ignore[reportGeneralTypeIssues]
         if hasattr(self, "title"):
-            attrs["title"] = self.title
+            attrs["title"] = self.title  # pyright: ignore[reportGeneralTypeIssues]
         return "<{} {}>".format(
             self.__class__.__name__, ",".join(f"{k}={v!r}" for k, v in attrs.items())
         )
@@ -64,6 +73,8 @@ class User(Base):
         self.password_hash = generate_password_hash(password)
 
     def validate_password(self, password: str) -> bool:
+        if self.password_hash is None:
+            return False
         return check_password_hash(self.password_hash, password)
 
 
@@ -165,7 +176,7 @@ class Category(Base):
     )
 
 
-class Staff(db.Model):
+class Staff(BaseModel):
     created_at: so.Mapped[datetime] = so.mapped_column(default=func.now())
     updated_at: so.Mapped[datetime] = so.mapped_column(default=func.now(), onupdate=func.now())
     city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), primary_key=True)
@@ -193,7 +204,7 @@ class City(Base):
     )
 
 
-class Partership(db.Model):
+class Partership(BaseModel):
     city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), primary_key=True)
     organization_id: so.Mapped[int] = so.mapped_column(
         sa.ForeignKey("organization.id"), primary_key=True

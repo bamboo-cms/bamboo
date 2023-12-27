@@ -199,12 +199,12 @@ class City(Base):
     site: so.Mapped["Site"] = so.relationship(back_populates="cities")
     staffs: so.DynamicMapped["Staff"] = so.relationship(back_populates="city")
     venues: so.DynamicMapped["Venue"] = so.relationship(back_populates="city")
-    partnerships: so.DynamicMapped["Partership"] = so.relationship(
+    partnerships: so.DynamicMapped["Partnership"] = so.relationship(
         back_populates="city", cascade="all, delete-orphan"
     )
 
 
-class Partership(BaseModel):
+class Partnership(BaseModel):
     city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), primary_key=True)
     organization_id: so.Mapped[int] = so.mapped_column(
         sa.ForeignKey("organization.id"), primary_key=True
@@ -221,7 +221,7 @@ class Organization(Base):
     url: so.Mapped[str]
     profile_image_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
     profile_image: so.Mapped["Media"] = so.relationship(foreign_keys=[profile_image_id])
-    partnerships: so.WriteOnlyMapped["Partership"] = so.relationship(
+    partnerships: so.WriteOnlyMapped["Partnership"] = so.relationship(
         back_populates="organization", cascade="all, delete-orphan"
     )
 

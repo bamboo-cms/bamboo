@@ -1,3 +1,3 @@
 from apiflask import APIBlueprint
 
-page_bp = APIBlueprint("page", __name__)
+page = APIBlueprint("page", __name__)

@@ -11,6 +11,8 @@ dependencies = [
     "flask-sqlalchemy>=3.1.1",
     "flask-migrate>=4.0.5",
     "python-dotenv>=1.0.0",
+    "Flask-APScheduler>=1.13.1",
+    "httpx>=0.26.0",
 ]
 requires-python = ">=3.12"
 license = {text = "BSD 3-Clause"}
@@ -26,6 +28,7 @@ drop-tables = { cmd = "flask drop-tables", help = "Drop tables" }
 [tool.pdm.dev-dependencies]
 test = [
     "pytest>=7.4.3",
+    "pytest-httpx>=0.28.0",
 ]
 dev = [
     "pre-commit>=3.6.0",

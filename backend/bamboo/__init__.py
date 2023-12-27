@@ -1,8 +1,13 @@
 from apiflask import APIFlask
 from flask import redirect, url_for
+from flask_apscheduler import APScheduler
 
 from bamboo import blueprints, database
 from bamboo.settings import config
+from bamboo.ssg import SSG
+
+scheduler = APScheduler()
+ssg = SSG()
 
 
 def create_app(config_name: str) -> APIFlask:
@@ -13,6 +18,11 @@ def create_app(config_name: str) -> APIFlask:
     blueprints.init_app(app)
     # database
     database.init_app(app)
+    # apscheduler
+    scheduler.init_app(app)
+    scheduler.start()
+    # SSG
+    ssg.init_app(app)
 
     # TODO: direct it to the dashboard when it's ready.
     @app.get("/")

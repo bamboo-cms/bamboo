@@ -13,7 +13,7 @@ def create_app(config_name: str) -> APIFlask:
     blueprints.init_app(app)
     # database
     database.init_app(app)
-
+    # TODO: direct it to the dashboard when it's ready.
     @app.get("/")
     def index():
         return redirect(url_for("openapi.docs"))

@@ -1,0 +1,49 @@
+networks:
+  innerNetwork:
+    driver: ${NETWORKS_DRIVER}
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ./docker/backend/Dockerfile`
+    environment:
+      DATABASE_URL: postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}
+      # todo ...
+
+  database:
+    image: postgres:16
+    privileged: true
+    environment:
+      - TZ=${TZ}
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    volumes:
+      - ${DATABASE_PATH}:/var/lib/postgresql/data
+    ports:
+      - "${DATABASE_PORT}:5432"
+    networks:
+      - innerNetwork
+    deploy:
+      resources:
+        limits:
+          memory: ${LIMIT_MEMORY_DATABASE}
+    restart: always
+
+  redis:
+    image: redis:5.0
+    environment:
+      - TZ=${TZ}
+    privileged: true
+    volumes:
+      - ${REDIS_PATH}:/data
+    ports:
+      - "${REDIS_PORT}:6379"
+    networks:
+      - innerNetwork
+    deploy:
+      resources:
+        limits:
+          memory: ${LIMIT_MEMORY_REDIS}
+    restart: always

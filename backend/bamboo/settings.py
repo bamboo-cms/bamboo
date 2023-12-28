@@ -12,6 +12,7 @@ prefix = "sqlite:///" if sys.platform.startswith("win") else "sqlite:////"
 class BaseConfig:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev key")
     SSG_SYNC_INTERVAL = os.getenv("SSG_SYNC_INTERVAL", "3")
+    SSG_GH_TOKEN = os.getenv("SSG_GH_TOKEN", "")
 
 
 class DevelopmentConfig(BaseConfig):

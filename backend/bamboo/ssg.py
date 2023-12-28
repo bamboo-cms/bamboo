@@ -48,7 +48,11 @@ class SSG:
             scheduler: APScheduler = app.apscheduler
         else:
             raise RuntimeError("APScheduler is not initialized.")
-        self.fetcher = Fetcher(minutes, scheduler, self.tpl_dir)
+        gh_token = app.config.get("SSG_GH_TOKEN")
+        config = {}
+        if gh_token:
+            config["GH_TOKEN"] = gh_token
+        self.fetcher = Fetcher(minutes, scheduler, self.tpl_dir, config)
         self.fetcher.schedule()
         app.teardown_appcontext(lambda e: self.fetcher.stop())
 
@@ -184,8 +188,8 @@ class Fetcher:
     @property
     def _gh_headers(self):
         headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
-        if "GH-TOKEN" in self.config:
-            headers["Authorization"] = f'Bearer {self.config.get("GH-TOKEN")}'
+        if "GH_TOKEN" in self.config:
+            headers["Authorization"] = f'Bearer {self.config.get("GH_TOKEN")}'
         return headers
 
     def _fetch_gh(self, name: str, url: str, config: Optional[dict] = None):

@@ -60,6 +60,12 @@ def test_auth_required(app, client):
     assert rv.status_code == 401
     assert rv.json["message"] == "Signature verification failed."
 
+    token = encode_jwt(payload={"user_id": 1024}, secret_key=current_app.config.get("SECRET_KEY"))
+
+    rv = client.get("/site-and-user", headers={"Authorization": f"Bearer {token}"})
+    assert rv.status_code == 401
+    assert rv.json["message"] == "Unauthorized"
+
 
 def test_login(client):
     user_only = models.Role(name="manage_user", permissions=MANAGE_USER)

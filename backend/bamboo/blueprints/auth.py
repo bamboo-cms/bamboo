@@ -136,8 +136,11 @@ def get_user_permissions(payload: dict[str, Any]) -> List[int]:
     user_permissions = []
     user_id = payload.get("user_id")
     user = models.User.query.get(user_id)
-    if user is None or user.role is None:
-        return []
+    if user is None:
+        abort(401)
+
+    if user.role is None:
+        abort(403)
 
     for permission in PERMISSIONS:
         if user.role.permissions & permission:

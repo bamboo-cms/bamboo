@@ -1,0 +1,37 @@
+name: Test Docker
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Start Docker Compose
+      run: |
+        docker-compose up -d
+        # Wait for containers to start
+        sleep 5
+
+    - name: Check containers
+      run: |
+        docker-compose ps -a
+        if docker-compose ps -a --format "{{.Status}}" | grep -q -v Up; then
+          echo "Some containers failed to start"
+          exit 1
+        fi
+
+    - name: Check web server
+      run: curl -sSfI http://localhost:8001 > /dev/null

@@ -8,6 +8,20 @@ A CMS optimized for conference hosting
   <img alt="Shows an illustrated sun in light mode and a moon with stars in dark mode." src="https://github.com/bamboo-cms/bamboo/assets/16336606/363b9bb0-8b39-496a-9d83-ba76247a80f7">
 </picture>
 
+## Start with Docker
+
+Create the `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+And modify the environment variables in `.env` as needed, then start the containers:
+
+```bash
+docker-compose up
+```
+
 ## Development
 
 Clone the repository:

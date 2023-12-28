@@ -90,7 +90,7 @@ def decode_jwt(
         others: For details about other args, see [the JWT RFC](https://datatracker.ietf.org/doc/html/rfc7519)
 
     Returns:
-        dict[str, Any]: _description_
+        dict[str, Any]: The data of JWT.
     """
     return jwt.decode(
         token=encoded_token,

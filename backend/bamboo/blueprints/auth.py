@@ -10,7 +10,7 @@ from apiflask import (
 from flask import current_app
 from jose.exceptions import JWTError
 
-from bamboo.database import models
+from bamboo.database import db, models
 from bamboo.schemas.auth import LoginSchema, TokenSchema
 from bamboo.utils import decode_jwt, encode_jwt
 
@@ -105,7 +105,7 @@ def login(json_data):
 @auth.auth_required
 def refresh():
     user_id = auth.current_user.get("user_id")
-    user = models.User.query.get(user_id)
+    user = db.session.get(models.User, user_id)
 
     if user is None:
         abort(401)
@@ -135,7 +135,7 @@ def verify_token(token: str) -> dict[str, Any] | None:
 def get_user_permissions(payload: dict[str, Any]) -> List[int]:
     user_permissions = []
     user_id = payload.get("user_id")
-    user = models.User.query.get(user_id)
+    user = db.session.get(models.User, user_id)
     if user is None:
         abort(401)
 

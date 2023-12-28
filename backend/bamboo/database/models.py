@@ -9,6 +9,16 @@ from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
+
+
+# https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#sqlite-foreign-keys
+@sa.event.listens_for(sa.engine.Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 if TYPE_CHECKING:
 
     class BaseModel(Model, so.DeclarativeBase):
@@ -56,15 +66,19 @@ class User(Base):
     introduction: so.Mapped[Optional[str]]
     active: so.Mapped[bool] = so.mapped_column(default=False)
     is_superuser: so.Mapped[bool] = so.mapped_column(default=False)
-    profile_image_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
-    role_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey("role.id"), index=True)
+    profile_image_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("media.id", ondelete="CASCADE"), index=True
+    )
+    role_id: so.Mapped[Optional[int]] = so.mapped_column(
+        sa.ForeignKey("role.id", ondelete="CASCADE"), index=True
+    )
     profile_image: so.Mapped["Media"] = so.relationship(foreign_keys=[profile_image_id])
     role: so.Mapped[Optional["Role"]] = so.relationship(back_populates="users")
     blogs: so.WriteOnlyMapped["Blog"] = so.relationship(
         back_populates="authors", secondary=blog_author, passive_deletes=True
     )
-    supporting: so.DynamicMapped["Staff"] = so.relationship(
-        back_populates="staff", cascade="all, delete-orphan"
+    supporting: so.WriteOnlyMapped["Staff"] = so.relationship(
+        back_populates="staff", cascade="all, delete-orphan", passive_deletes=True
     )
 
     @property
@@ -99,29 +113,29 @@ class Site(Base):
     deploy_target: so.Mapped[Optional[str]]
     deploy_method: so.Mapped[Optional[str]]
     deploy_secret: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
-    pages: so.DynamicMapped["Page"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    pages: so.WriteOnlyMapped["Page"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    notifications: so.DynamicMapped["Notification"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    notifications: so.WriteOnlyMapped["Notification"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    volunteer_forms: so.DynamicMapped["VolunteerForm"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    volunteer_forms: so.WriteOnlyMapped["VolunteerForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    sponsor_forms: so.DynamicMapped["SponsorForm"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    sponsor_forms: so.WriteOnlyMapped["SponsorForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    speaker_forms: so.DynamicMapped["SpeakerForm"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    speaker_forms: so.WriteOnlyMapped["SpeakerForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    talks: so.DynamicMapped["Talk"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    talks: so.WriteOnlyMapped["Talk"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    blogs: so.DynamicMapped["Blog"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    blogs: so.WriteOnlyMapped["Blog"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    cities: so.DynamicMapped["City"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    cities: so.WriteOnlyMapped["City"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
 
 
@@ -129,31 +143,41 @@ class Page(Base):
     title: so.Mapped[str]
     path: so.Mapped[str]
     content: so.Mapped[str] = so.mapped_column(sa.Text)
-    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("site.id", ondelete="CASCADE"), index=True
+    )
     site: so.Mapped["Site"] = so.relationship(back_populates="pages")
 
 
 class Notification(Base):
     content: so.Mapped[str] = so.mapped_column(sa.Text)
-    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("site.id", ondelete="CASCADE"), index=True
+    )
     site: so.Mapped["Site"] = so.relationship(back_populates="notifications")
 
 
 class VolunteerForm(Base):
     # ...
-    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("site.id", ondelete="CASCADE"), index=True
+    )
     site: so.Mapped["Site"] = so.relationship(back_populates="volunteer_forms")
 
 
 class SponsorForm(Base):
     # ...
-    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("site.id", ondelete="CASCADE"), index=True
+    )
     site: so.Mapped["Site"] = so.relationship(back_populates="sponsor_forms")
 
 
 class SpeakerForm(Base):
     # ...
-    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("site.id", ondelete="CASCADE"), index=True
+    )
     site: so.Mapped["Site"] = so.relationship(back_populates="speaker_forms")
 
 
@@ -176,12 +200,16 @@ class Talk(Base):
     content: so.Mapped[str] = so.mapped_column(sa.Text, default="")
     video_url: so.Mapped[Optional[str]]
     slides_url: so.Mapped[Optional[str]]
-    slides_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
+    slides_id: so.Mapped[Optional[int]] = so.mapped_column(
+        sa.ForeignKey("media.id", ondelete="CASCADE"), index=True
+    )
     slides: so.Mapped["Media"] = so.relationship(foreign_keys=[slides_id])
-    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("site.id", ondelete="CASCADE"), index=True
+    )
     site: so.Mapped["Site"] = so.relationship(back_populates="talks")
     schedule_item: so.Mapped[Optional["ScheduleItem"]] = so.relationship(back_populates="talk")
-    categories: so.DynamicMapped["Category"] = so.relationship(
+    categories: so.WriteOnlyMapped["Category"] = so.relationship(
         secondary=talk_category, back_populates="talks"
     )
 
@@ -216,23 +244,27 @@ class City(Base):
     end: so.Mapped[Optional[datetime]]
     registration_url: so.Mapped[Optional[str]]
     live_urls: so.Mapped[Optional[str]]
-    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("site.id", ondelete="CASCADE"), index=True
+    )
     site: so.Mapped["Site"] = so.relationship(back_populates="cities")
-    staffs: so.DynamicMapped["Staff"] = so.relationship(
-        back_populates="city", cascade="all, delete-orphan"
+    staffs: so.WriteOnlyMapped["Staff"] = so.relationship(
+        back_populates="city", cascade="all, delete-orphan", passive_deletes=True
     )
-    venues: so.DynamicMapped["Venue"] = so.relationship(
-        back_populates="city", cascade="all, delete-orphan"
+    venues: so.WriteOnlyMapped["Venue"] = so.relationship(
+        back_populates="city", cascade="all, delete-orphan", passive_deletes=True
     )
-    partnerships: so.DynamicMapped["Partnership"] = so.relationship(
-        back_populates="city", cascade="all, delete-orphan"
+    partnerships: so.WriteOnlyMapped["Partnership"] = so.relationship(
+        back_populates="city", cascade="all, delete-orphan", passive_deletes=True
     )
 
 
 class Partnership(BaseModel):
-    city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), primary_key=True)
+    city_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("city.id", ondelete="CASCADE"), primary_key=True
+    )
     organization_id: so.Mapped[int] = so.mapped_column(
-        sa.ForeignKey("organization.id"), primary_key=True
+        sa.ForeignKey("organization.id", ondelete="CASCADE"), primary_key=True
     )
     category: so.Mapped[str]
     created_at: so.Mapped[datetime] = so.mapped_column(default=func.now())
@@ -244,10 +276,12 @@ class Partnership(BaseModel):
 class Organization(Base):
     name: so.Mapped[str]
     url: so.Mapped[str]
-    profile_image_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
+    profile_image_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("media.id", ondelete="CASCADE"), index=True
+    )
     profile_image: so.Mapped["Media"] = so.relationship(foreign_keys=[profile_image_id])
     partnerships: so.WriteOnlyMapped["Partnership"] = so.relationship(
-        back_populates="organization", cascade="all, delete-orphan"
+        back_populates="organization", cascade="all, delete-orphan", passive_deletes=True
     )
 
 
@@ -255,16 +289,22 @@ class Blog(Base):
     title: so.Mapped[str]
     path: so.Mapped[str]
     content: so.Mapped[str] = so.mapped_column(sa.Text)
-    site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
+    site_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("site.id", ondelete="CASCADE"), index=True
+    )
     site: so.Mapped["Site"] = so.relationship(back_populates="blogs")
-    authors: so.DynamicMapped["User"] = so.relationship(
+    authors: so.WriteOnlyMapped["User"] = so.relationship(
         back_populates="blogs", secondary=blog_author
     )
 
 
 class ScheduleItem(Base):
-    venue_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("venue.id"), index=True)
-    talk_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey("talk.id"), index=True)
+    venue_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("venue.id", ondelete="CASCADE"), index=True
+    )
+    talk_id: so.Mapped[Optional[int]] = so.mapped_column(
+        sa.ForeignKey("talk.id", ondelete="CASCADE"), index=True
+    )
     content: so.Mapped[str] = so.mapped_column(sa.Text, default="")
     start: so.Mapped[datetime]
     end: so.Mapped[datetime]
@@ -275,8 +315,10 @@ class ScheduleItem(Base):
 class Venue(Base):
     name: so.Mapped[str]
     address: so.Mapped[str]
-    city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), index=True)
+    city_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("city.id", ondelete="CASCADE"), index=True
+    )
     city: so.Mapped["City"] = so.relationship(back_populates="venues")
-    schedule_items: so.DynamicMapped["ScheduleItem"] = so.relationship(
-        back_populates="venue", cascade="all, delete-orphan"
+    schedule_items: so.WriteOnlyMapped["ScheduleItem"] = so.relationship(
+        back_populates="venue", cascade="all, delete-orphan", passive_deletes=True
     )

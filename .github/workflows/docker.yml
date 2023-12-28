@@ -21,6 +21,7 @@ jobs:
 
     - name: Start Docker Compose
       run: |
+        cp .env.example .env
         docker-compose up -d
         # Wait for containers to start
         sleep 5

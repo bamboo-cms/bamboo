@@ -67,12 +67,12 @@ def auth_required(self, f=None, permissions: int = 0, optional=None) -> Any:
 
 token_auth = HTTPTokenAuth(scheme="Bearer", header="Authorization")
 token_auth.auth_required = types.MethodType(auth_required, token_auth)
-auth_bp = APIBlueprint("auth", __name__)
+auth = APIBlueprint("auth", __name__)
 
 
-@auth_bp.post("/login")
-@auth_bp.input(LoginSchema)
-@auth_bp.output(TokenSchema)
+@auth.post("/login")
+@auth.input(LoginSchema)
+@auth.output(TokenSchema)
 def login(json_data):
     user = models.User.query.filter_by(name=json_data["username"]).first()
     if user is None or user.validate_password(json_data["password"]) is False:
@@ -100,8 +100,8 @@ def login(json_data):
     }
 
 
-@auth_bp.post("/refresh")
-@auth_bp.output(TokenSchema)
+@auth.post("/refresh")
+@auth.output(TokenSchema)
 @token_auth.auth_required
 def refresh():
     user_id = token_auth.current_user.get("user_id")
@@ -143,6 +143,6 @@ def get_user_permissions(payload: dict[str, Any]) -> List[int]:
         abort(403)
 
     for permission in PERMISSIONS:
-        if user.role.permissions & permission:  # type: ignore[unnecessary-check]
+        if user.role.permissions & permission:  # type: ignore[union-attr]
             user_permissions.append(permission)
     return user_permissions

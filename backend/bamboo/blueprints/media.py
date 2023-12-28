@@ -22,6 +22,7 @@ def upload_media(files_data: dict) -> dict | tuple[dict, int]:
     content_type = mimetypes.guess_type(upload_filename)[0]
     filename = f"{gen_uuid()}_{upload_filename}"
     media_dir = Path(current_app.config["BAMBOO_MEDIA_DIR"])
+    media_dir.mkdir(parents=True, exist_ok=True)
     media_file = media_dir / filename
     file.save(media_file)
     file_suffix = media_file.suffix.lower()

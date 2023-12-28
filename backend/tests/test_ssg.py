@@ -2,35 +2,55 @@ import tempfile
 import zipfile
 from datetime import timedelta
 from pathlib import Path
+from typing import Generator
 
 import pytest
-from bamboo.database import db
 from bamboo.database.models import Site
-from bamboo.ssg import Fetcher
+from bamboo.ssg import SSG, Fetcher
 from flask_apscheduler import APScheduler
+
+files = {
+    "index.html": b"hello {{site.name}}",
+    "jinja/layout.html": b"hello {% block name %}{% endblock %}",
+    "page.html": b'{% extends "jinja/layout.html" %}\n{% block name %}{{site.name}}{% endblock %}',
+    "about/index.html": b'{% extends "jinja/layout.html" %}\n{% block name %}{{site.name}}{% endblock %}',
+    "static/style.css": b"body { color: red; }",
+    "static/index.js": b"console.log('Hello, world!');",
+    "static/favicon.ico": b"test",
+    "static/logo.jpg": b"test",
+}
+
+
+@pytest.fixture(autouse=True)
+def mock_sites(app) -> list[Site]:
+    db = app.extensions["sqlalchemy"]
+    db.create_all()
+    sites = []
+    for i in range(3):
+        site = Site(
+            name=f"test{i}", config={}, template_url=f"https://github.com/bamboo-cms/bamboo{i}"
+        )
+        sites.append(site)
+        db.session.add(site)
+    db.session.commit()
+    return sites
 
 
 @pytest.fixture
-def zip_file():
+def zip_file() -> bytes:
     with tempfile.NamedTemporaryFile(suffix=".zip") as f:
         with zipfile.ZipFile(f, "w") as zf:
-            zf.writestr("tpl/index.html", b"Hello, world!")
-            zf.writestr("tpl/about.html", b"Hello, world!")
+            for name, content in files.items():
+                zf.writestr("tpl/" + name, content)
         f.seek(0)
         return f.read()
 
 
 @pytest.fixture(autouse=True)
-def mock_site(httpx_mock, zip_file):
-    db.create_all()
-    for i in range(3):
-        db.session.add(
-            Site(
-                name=f"test{i}", config={}, template_url=f"https://github.com/bamboo-cms/bamboo{i}"
-            )
-        )
+def mock_fetcher_request(httpx_mock, mock_sites, zip_file):
+    for site in mock_sites:
         httpx_mock.add_response(
-            url=f"https://api.github.com/repos/bamboo-cms/bamboo{i}/zipball",
+            url=f"https://api.github.com/repos/bamboo-cms/bamboo{site.id - 1}/zipball",
             headers={"Location": "https://exapmle.com"},
             method="GET",
             status_code=302,
@@ -41,24 +61,58 @@ def mock_site(httpx_mock, zip_file):
         method="GET",
         status_code=200,
     )
-    db.session.commit()
 
 
 @pytest.fixture(autouse=True)
-def apscheduler(app):
-    scheduler = APScheduler()
-    scheduler.init_app(app)
-    yield scheduler
+def apscheduler(app) -> APScheduler:
+    return app.apscheduler
 
 
-def test_fetcher_sync(apscheduler):
+def test_fetcher(apscheduler, mock_sites):
     with tempfile.TemporaryDirectory() as tmp_dir:
         fetcher = Fetcher(timedelta(seconds=1), apscheduler, Path(tmp_dir))
         fetcher.sync()
         fetcher.stop()
-        for site in Site.query.all():
-            for file in ["index.html", "about.html"]:
+        for site in mock_sites:
+            for file, content in files.items():
                 assert (Path(tmp_dir) / f"{site.id}_{site.name}" / file).exists()
-                assert (
-                    Path(tmp_dir) / f"{site.id}_{site.name}" / file
-                ).read_text() == "Hello, world!"
+                assert (Path(tmp_dir) / f"{site.id}_{site.name}" / file).read_bytes() == content
+
+
+@pytest.fixture(autouse=True)
+def ssg(app) -> Generator[SSG, None, None]:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        ssg = app.extensions["ssg"]
+        ssg.tpl_dir = Path(tmp_dir)
+        ssg.fetcher.store_dir = Path(tmp_dir)
+        ssg.fetcher.sync()
+        yield ssg
+
+
+def test_ssg_render_page(app, ssg, mock_sites):
+    for site in mock_sites:
+        for file, content in files.items():
+            with app.test_request_context():
+                res = ssg.render_page(site, file)
+            if file.startswith("static"):
+                assert res.status_code == 200
+                data = b"".join(res.iter_encoded())
+                assert data == content
+            elif file.startswith("jinja"):
+                assert res.status_code == 403
+            else:
+                assert res.status_code == 200
+                data = b"".join(res.iter_encoded())
+                assert data == b"hello " + site.name.encode()
+
+
+def test_ssg_pack_site(ssg, mock_sites):
+    for site in mock_sites:
+        with ssg.pack_site(site) as zf:  # type: zipfile.ZipFile
+            for file, content in files.items():
+                if file.startswith("static"):
+                    assert zf.read(file) == content
+                elif file.startswith("jinja"):
+                    assert file not in zf.namelist()
+                else:
+                    assert zf.read(file) == b"hello " + site.name.encode()

@@ -144,7 +144,7 @@ class Media(Base):
 
 class Site(Base):
     name: so.Mapped[str]
-    config: so.Mapped[dict] = so.mapped_column(type_=sa.JSON)
+    config: so.Mapped[Optional[dict]] = so.mapped_column(type_=sa.JSON)
     template_url: so.Mapped[Optional[str]]
     deploy_target: so.Mapped[Optional[str]]
     deploy_method: so.Mapped[Optional[str]]

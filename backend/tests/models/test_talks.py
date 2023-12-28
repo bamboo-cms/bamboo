@@ -16,6 +16,10 @@ def test_talk_category():
         act,
     }
 
+    db.session.delete(keynote)
+    db.session.commit()
+    assert talk.categories.all() == [act]
+
 
 def test_talk_schedule():
     site = models.Site(name="Test site", config={})
@@ -28,3 +32,9 @@ def test_talk_schedule():
     db.session.add_all([site, talk, schedule_item, city, venue])
     db.session.commit()
     assert talk.schedule_item == schedule_item
+
+    db.session.delete(city)
+    db.session.commit()
+    assert models.Venue.query.count() == 0
+    assert models.ScheduleItem.query.count() == 0
+    assert models.Talk.query.count() == 1

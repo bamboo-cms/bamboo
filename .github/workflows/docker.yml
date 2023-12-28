@@ -34,4 +34,4 @@ jobs:
         fi
 
     - name: Check web server
-      run: curl -sSfI http://localhost:8001 > /dev/null
+      run: curl -sSfI http://localhost:8000 > /dev/null

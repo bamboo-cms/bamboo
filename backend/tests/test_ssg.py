@@ -1,5 +1,4 @@
 import tempfile
-import time
 import zipfile
 from pathlib import Path
 from typing import Generator
@@ -22,7 +21,7 @@ files = {
 
 
 @pytest.fixture(autouse=True)
-def mock_sites(app) -> list[Site]:
+def mock_sites(app) -> Generator[list[Site], None, None]:
     db = app.extensions["sqlalchemy"]
     db.create_all()
     sites = []
@@ -35,7 +34,8 @@ def mock_sites(app) -> list[Site]:
         sites.append(site)
         db.session.add(site)
     db.session.commit()
-    return sites
+    yield sites
+    db.drop_all()
 
 
 @pytest.fixture
@@ -71,8 +71,7 @@ def ssg(app) -> Generator[SSG, None, None]:
         ssg = app.extensions["ssg"]
         ssg.tpl_dir = Path(tmp_dir)
         ssg.fetcher.store_dir = Path(tmp_dir)
-        app.apscheduler.start()
-        time.sleep(3)  # wait for first schedule
+        ssg.fetcher.schedule()
         yield ssg
 
 

@@ -22,6 +22,7 @@ class DevelopmentConfig(BaseConfig):
 class TestingConfig(BaseConfig):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"  # in-memory database
+    RQ_CONNECTION_CLASS = "fakeredis.FakeStrictRedis"
 
 
 class ProductionConfig(BaseConfig):

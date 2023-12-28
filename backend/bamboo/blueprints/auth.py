@@ -65,7 +65,7 @@ def auth_required(self, f=None, permissions: int = 0, optional=None) -> Any:
     return self.login_required(f=None, role=[required_permissions], optional=optional)
 
 
-auth = HTTPTokenAuth(scheme="Bearer")
+auth = HTTPTokenAuth(scheme="Bearer", header="Authorization")
 auth.auth_required = types.MethodType(auth_required, auth)
 auth_bp = APIBlueprint("auth", __name__)
 
@@ -75,37 +75,37 @@ auth_bp = APIBlueprint("auth", __name__)
 @auth_bp.output(TokenSchema)
 def login(json_data):
     user = models.User.query.filter_by(name=json_data["username"]).first()
-    if user and user.validate_password(json_data["password"]):
-        # Only the user with a role and the role's permissions is not 0 are allowed to log in.
-        if user.role is None or user.role.permissions == 0:
-            abort(403)
+    if user is None or user.validate_password(json_data["password"]) is False:
+        abort(401, "Incorrect username or password.")
 
-        access_token = encode_jwt(
-            payload={"user_id": user.id},
-            secret_key=current_app.config.get("SECRET_KEY"),
-        )
+    # Only the user with a role and the role's permissions is not 0 are allowed to log in.
+    if user.role is None or user.role.permissions == 0:
+        abort(403)
 
-        refresh_token = encode_jwt(
-            payload={"user_id": user.id},
-            secret_key=current_app.config.get("SECRET_KEY"),
-            token_type="refresh",
-            expires_delta=timedelta(days=7),
-        )
+    access_token = encode_jwt(
+        payload={"user_id": user.id},
+        secret_key=current_app.config.get("SECRET_KEY"),
+    )
 
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-        }
+    refresh_token = encode_jwt(
+        payload={"user_id": user.id},
+        secret_key=current_app.config.get("SECRET_KEY"),
+        token_type="refresh",
+        expires_delta=timedelta(days=7),
+    )
 
-    abort(401, "Incorrect username or password.")
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+    }
 
 
 @auth_bp.post("/refresh")
 @auth_bp.output(TokenSchema)
 @auth.auth_required
 def refresh():
-    current_user = auth.current_user
-    user = models.User.query.get(current_user.id)
+    user_id = auth.current_user.get("user_id")
+    user = models.User.query.get(user_id)
 
     if user is None:
         abort(401)
@@ -122,19 +122,23 @@ def refresh():
 
 
 @auth.verify_token
-def verify_token(token: str) -> models.User | None:
+def verify_token(token: str) -> dict[str, Any] | None:
     try:
         payload = decode_jwt(encoded_token=token, secret_key=current_app.config.get("SECRET_KEY"))
     except JWTError as error:
         abort(401, str(error))
 
-    user_id = payload["user_id"]
-    return models.User.query.get(user_id)
+    return {"user_id": payload.get("user_id")}
 
 
 @auth.get_user_roles
-def get_user_permissions(user: models.User) -> List[int]:
+def get_user_permissions(payload: dict[str, Any]) -> List[int]:
     user_permissions = []
+    user_id = payload.get("user_id")
+    user = models.User.query.get(user_id)
+    if user is None or user.role is None:
+        return []
+
     for permission in PERMISSIONS:
         if user.role.permissions & permission:
             user_permissions.append(permission)

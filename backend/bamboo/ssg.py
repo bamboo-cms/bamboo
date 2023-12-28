@@ -2,6 +2,7 @@ import logging
 import re
 import shutil
 import tempfile
+import threading
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -28,15 +29,14 @@ class SSG:
     Static site generator.
     """
 
+    fetcher: "Fetcher"
+
     def __init__(self, app: Optional[Flask] = None):
         if app is not None:
             self.init_app(app)
         self.tpl_dir = (
             Path(__file__).parent.parent.parent / "data" / "templates"
         )  # 'data' in root of project
-        self.jinja_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(self.tpl_dir), auto_reload=True
-        )
 
     def init_app(self, app: Flask):
         if not hasattr(app, "extensions"):
@@ -48,9 +48,9 @@ class SSG:
             scheduler: APScheduler = app.apscheduler
         else:
             raise RuntimeError("APScheduler is not initialized.")
-        fetcher = Fetcher(minutes, scheduler, self.tpl_dir)
-        fetcher.schedule()
-        app.teardown_appcontext(lambda e: fetcher.stop())
+        self.fetcher = Fetcher(minutes, scheduler, self.tpl_dir)
+        self.fetcher.schedule()
+        app.teardown_appcontext(lambda e: self.fetcher.stop())
 
     def render_page(self, site: Site, path: str) -> Response:
         """
@@ -59,17 +59,18 @@ class SSG:
         :param site: Site to render.
         :param path: Path to render, it **must be not** startswith "/".
         """
-        tpl_path = Path(f"{site.id}_{site.name}") / path
         if path.startswith(reserved_dir):
-            return Response(f"Reserved path: {path}", status=403)
+            return Response(f"Reserved path: {path}", status=403, mimetype="text/plain")
         elif path.startswith(static_dir):
-            return send_from_directory(self.tpl_dir, tpl_path)
+            asset_path = Path(f"{site.id}_{site.name}") / path
+            return send_from_directory(self.tpl_dir, asset_path)
         try:
-            template = self.jinja_env.get_template(str(tpl_path))
-        except jinja2.TemplateNotFound:
-            logger.warning(f"Template not found: {tpl_path}")
-            return Response(f"Template not found: {tpl_path}", status=404)
-        page = template.render(site=site)
+            jinja_env = self.fetcher.get_jinja_env(site)
+            template = jinja_env.get_template(path)
+            page = template.render(site=site)
+        except (jinja2.TemplateNotFound, FileNotFoundError) as e:
+            logger.warning(f"Template not found: {e}")
+            return Response(f"Template not found: {e}", status=404, mimetype="text/plain")
         return Response(page, mimetype="text/html")
 
     @contextmanager
@@ -78,6 +79,7 @@ class SSG:
         Packs a site into a zip file.
 
         :param site: Site to pack.
+        :raises jinja2.TemplateNotFound: If template not found.
         """
         site_dir = self.tpl_dir / f"{site.id}_{site.name}"
         if not site_dir.exists():
@@ -85,15 +87,20 @@ class SSG:
         with tempfile.NamedTemporaryFile(suffix=".zip") as tmp:
             with zipfile.ZipFile(tmp, "w") as zip_file:
                 # render page
-                for tpl_path in site_dir.glob("**.html"):
+                for tpl_path in site_dir.glob("**/*.html"):
                     if tpl_path.is_dir():
                         continue
                     # ignore reserved dir and static dir
-                    if tpl_path.parts[0] in (reserved_dir, static_dir):
+                    if tpl_path.relative_to(site_dir).parts[0] in (reserved_dir, static_dir):
                         continue
-                    tpl_rel_path = tpl_path.relative_to(self.tpl_dir)
-                    tpl = self.jinja_env.get_template(str(tpl_rel_path))
-                    page = tpl.render(site=site)
+                    tpl_rel_path = tpl_path.relative_to(site_dir)
+                    try:
+                        jinja_env = self.fetcher.get_jinja_env(site)
+                        tpl = jinja_env.get_template(str(tpl_rel_path))
+                        page = tpl.render(site=site)
+                    except (jinja2.TemplateNotFound, FileNotFoundError) as e:
+                        logger.error(f"Template not found: {e}")
+                        raise
                     p = tpl_path.relative_to(site_dir)
                     zip_file.writestr(str(p), page)
                 # copy static files
@@ -128,6 +135,8 @@ class Fetcher:
         self.client = httpx.Client()
         self.scheduler = scheduler
         self.config = config or {}
+        self._jinja_envs: dict[str, jinja2.Environment] = {}
+        self._jinja_envs_lock = threading.Lock()
 
     def sync(self):
         """
@@ -157,6 +166,20 @@ class Fetcher:
         Stops the fetcher.
         """
         self.client.close()
+
+    def get_jinja_env(self, site: Site) -> jinja2.Environment:
+        name = f"{site.id}_{site.name}"
+        path = self.store_dir / name
+        with self._jinja_envs_lock:
+            if not path.exists():
+                if name in self._jinja_envs:
+                    del self._jinja_envs[name]
+                raise FileNotFoundError(f"Site {site.id} not found.")
+            if name not in self._jinja_envs:
+                self._jinja_envs[name] = jinja2.Environment(
+                    loader=jinja2.FileSystemLoader(str(path))
+                )
+            return self._jinja_envs[name]
 
     @property
     def _gh_headers(self):

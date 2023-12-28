@@ -1,16 +1,25 @@
 from datetime import datetime
-from typing import NoReturn, Optional
+from typing import TYPE_CHECKING, NoReturn, Optional
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy.model import Model
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
+if TYPE_CHECKING:
+
+    class BaseModel(Model, so.DeclarativeBase):
+        """A dummy BaseModel class for type checking"""
+
+        pass
+else:
+    BaseModel = db.Model
 
 
-class Base(db.Model):
+class Base(BaseModel):
     __abstract__ = True
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -20,9 +29,9 @@ class Base(db.Model):
     def __repr__(self):
         attrs = {"id": self.id}
         if hasattr(self, "name"):
-            attrs["name"] = self.name
+            attrs["name"] = self.name  # pyright: ignore[reportGeneralTypeIssues]
         if hasattr(self, "title"):
-            attrs["title"] = self.title
+            attrs["title"] = self.title  # pyright: ignore[reportGeneralTypeIssues]
         return "<{} {}>".format(
             self.__class__.__name__, ",".join(f"{k}={v!r}" for k, v in attrs.items())
         )
@@ -50,9 +59,12 @@ class User(Base):
     profile_image_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
     role_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey("role.id"), index=True)
     profile_image: so.Mapped["Media"] = so.relationship(foreign_keys=[profile_image_id])
-    role: so.Mapped["Role"] = so.relationship(back_populates="users")
+    role: so.Mapped[Optional["Role"]] = so.relationship(back_populates="users")
     blogs: so.WriteOnlyMapped["Blog"] = so.relationship(
         back_populates="authors", secondary=blog_author, passive_deletes=True
+    )
+    supporting: so.DynamicMapped["Staff"] = so.relationship(
+        back_populates="staff", cascade="all, delete-orphan"
     )
 
     @property
@@ -64,6 +76,8 @@ class User(Base):
         self.password_hash = generate_password_hash(password)
 
     def validate_password(self, password: str) -> bool:
+        if self.password_hash is None:
+            return False
         return check_password_hash(self.password_hash, password)
 
 
@@ -85,14 +99,30 @@ class Site(Base):
     deploy_target: so.Mapped[Optional[str]]
     deploy_method: so.Mapped[Optional[str]]
     deploy_secret: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
-    pages: so.WriteOnlyMapped["Page"] = so.relationship(back_populates="site")
-    notifications: so.WriteOnlyMapped["Notification"] = so.relationship(back_populates="site")
-    volunteer_forms: so.WriteOnlyMapped["VolunteerForm"] = so.relationship(back_populates="site")
-    sponsor_forms: so.WriteOnlyMapped["SponsorForm"] = so.relationship(back_populates="site")
-    speaker_forms: so.WriteOnlyMapped["SpeakerForm"] = so.relationship(back_populates="site")
-    talks: so.WriteOnlyMapped["Talk"] = so.relationship(back_populates="site")
-    blogs: so.WriteOnlyMapped["Blog"] = so.relationship(back_populates="site")
-    cities: so.WriteOnlyMapped["City"] = so.relationship(back_populates="site")
+    pages: so.DynamicMapped["Page"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    notifications: so.DynamicMapped["Notification"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    volunteer_forms: so.DynamicMapped["VolunteerForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    sponsor_forms: so.DynamicMapped["SponsorForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    speaker_forms: so.DynamicMapped["SpeakerForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    talks: so.DynamicMapped["Talk"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    blogs: so.DynamicMapped["Blog"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
+    cities: so.DynamicMapped["City"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan"
+    )
 
 
 class Page(Base):
@@ -150,11 +180,9 @@ class Talk(Base):
     slides: so.Mapped["Media"] = so.relationship(foreign_keys=[slides_id])
     site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
     site: so.Mapped["Site"] = so.relationship(back_populates="talks")
-    schedule_item: so.Mapped[Optional["ScheduleItem"]] = so.relationship(
-        back_populates="talk", uselist=False, cascade="all, delete-orphan"
-    )
+    schedule_item: so.Mapped[Optional["ScheduleItem"]] = so.relationship(back_populates="talk")
     categories: so.DynamicMapped["Category"] = so.relationship(
-        secondary=talk_category, back_populates="talks", passive_deletes=True
+        secondary=talk_category, back_populates="talks"
     )
 
 
@@ -165,13 +193,17 @@ class Category(Base):
     )
 
 
-class Staff(db.Model):
+class Staff(BaseModel):
     created_at: so.Mapped[datetime] = so.mapped_column(default=func.now())
     updated_at: so.Mapped[datetime] = so.mapped_column(default=func.now(), onupdate=func.now())
-    city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), primary_key=True)
-    staff_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), primary_key=True)
-    city: so.Mapped["City"] = so.relationship(back_populates="staffs")
-    staff: so.Mapped["User"] = so.relationship(foreign_keys=[staff_id])
+    city_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("city.id", ondelete="CASCADE"), primary_key=True
+    )
+    staff_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("user.id", ondelete="CASCADE"), primary_key=True
+    )
+    city: so.Mapped["City"] = so.relationship(back_populates="staffs", foreign_keys=[city_id])
+    staff: so.Mapped["User"] = so.relationship(back_populates="supporting", foreign_keys=[staff_id])
     category: so.Mapped[str]
 
 
@@ -186,14 +218,18 @@ class City(Base):
     live_urls: so.Mapped[Optional[str]]
     site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
     site: so.Mapped["Site"] = so.relationship(back_populates="cities")
-    staffs: so.DynamicMapped["Staff"] = so.relationship(back_populates="city")
-    venues: so.DynamicMapped["Venue"] = so.relationship(back_populates="city")
-    partnerships: so.DynamicMapped["Partership"] = so.relationship(
+    staffs: so.DynamicMapped["Staff"] = so.relationship(
+        back_populates="city", cascade="all, delete-orphan"
+    )
+    venues: so.DynamicMapped["Venue"] = so.relationship(
+        back_populates="city", cascade="all, delete-orphan"
+    )
+    partnerships: so.DynamicMapped["Partnership"] = so.relationship(
         back_populates="city", cascade="all, delete-orphan"
     )
 
 
-class Partership(db.Model):
+class Partnership(BaseModel):
     city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("city.id"), primary_key=True)
     organization_id: so.Mapped[int] = so.mapped_column(
         sa.ForeignKey("organization.id"), primary_key=True
@@ -210,7 +246,7 @@ class Organization(Base):
     url: so.Mapped[str]
     profile_image_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("media.id"), index=True)
     profile_image: so.Mapped["Media"] = so.relationship(foreign_keys=[profile_image_id])
-    partnerships: so.WriteOnlyMapped["Partership"] = so.relationship(
+    partnerships: so.WriteOnlyMapped["Partnership"] = so.relationship(
         back_populates="organization", cascade="all, delete-orphan"
     )
 
@@ -222,7 +258,7 @@ class Blog(Base):
     site_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("site.id"), index=True)
     site: so.Mapped["Site"] = so.relationship(back_populates="blogs")
     authors: so.DynamicMapped["User"] = so.relationship(
-        back_populates="blogs", passive_deletes=True, secondary=blog_author
+        back_populates="blogs", secondary=blog_author
     )
 
 
@@ -233,7 +269,7 @@ class ScheduleItem(Base):
     start: so.Mapped[datetime]
     end: so.Mapped[datetime]
     venue: so.Mapped["Venue"] = so.relationship(back_populates="schedule_items")
-    talk: so.Mapped["Talk"] = so.relationship(back_populates="schedule_item", uselist=False)
+    talk: so.Mapped["Talk"] = so.relationship(back_populates="schedule_item")
 
 
 class Venue(Base):

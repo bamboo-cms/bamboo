@@ -2,6 +2,7 @@ import types
 from datetime import timedelta
 from typing import Any, List
 
+
 from apiflask import (
     APIBlueprint,
     HTTPTokenAuth,

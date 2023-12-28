@@ -19,6 +19,8 @@ def create_app(config_name: str) -> APIFlask:
     # database
     database.init_app(app)
     # apscheduler
+    if scheduler.running:
+        scheduler.shutdown(wait=True)
     scheduler.init_app(app)
     scheduler.start()
     # SSG

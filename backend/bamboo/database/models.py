@@ -94,34 +94,34 @@ class Media(Base):
 
 class Site(Base):
     name: so.Mapped[str]
-    config: so.Mapped[dict] = so.mapped_column(type_=sa.JSON)
+    config: so.Mapped[Optional[dict]] = so.mapped_column(type_=sa.JSON)
     template_url: so.Mapped[Optional[str]]
     deploy_target: so.Mapped[Optional[str]]
     deploy_method: so.Mapped[Optional[str]]
     deploy_secret: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
-    pages: so.DynamicMapped["Page"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    pages: so.WriteOnlyMapped["Page"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    notifications: so.DynamicMapped["Notification"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    notifications: so.WriteOnlyMapped["Notification"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    volunteer_forms: so.DynamicMapped["VolunteerForm"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    volunteer_forms: so.WriteOnlyMapped["VolunteerForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    sponsor_forms: so.DynamicMapped["SponsorForm"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    sponsor_forms: so.WriteOnlyMapped["SponsorForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    speaker_forms: so.DynamicMapped["SpeakerForm"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    speaker_forms: so.WriteOnlyMapped["SpeakerForm"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    talks: so.DynamicMapped["Talk"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    talks: so.WriteOnlyMapped["Talk"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    blogs: so.DynamicMapped["Blog"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    blogs: so.WriteOnlyMapped["Blog"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
-    cities: so.DynamicMapped["City"] = so.relationship(
-        back_populates="site", cascade="all, delete-orphan"
+    cities: so.WriteOnlyMapped["City"] = so.relationship(
+        back_populates="site", cascade="all, delete-orphan", passive_deletes=True
     )
 
 

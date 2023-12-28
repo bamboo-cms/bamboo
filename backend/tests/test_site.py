@@ -3,7 +3,7 @@ def test_get_sites(client):
     assert response.status_code == 200
     assert response.json == []
 
-    response = client.post("/site", json={"name": "Site 1", "config": {}})
+    response = client.post("/site", json={"name": "Site 1"})
     assert response.status_code == 201
 
     response = client.get("/site/all")
@@ -16,7 +16,7 @@ def test_get_site(client):
     response = client.get("/site/999")
     assert response.status_code == 404
 
-    response = client.post("/site", json={"name": "Site 2", "config": {}})
+    response = client.post("/site", json={"name": "Site 2"})
     assert response.status_code == 201
     site_id = response.json["id"]
 
@@ -29,9 +29,9 @@ def test_creat_site(client):
     response = client.post("/site", json={})
     assert response.status_code == 422
     assert response.json["message"] == "Validation error"
-    assert len(response.json["detail"]["json"]) == 2
+    assert len(response.json["detail"]["json"]) == 1
 
-    response = client.post("/site", json={"name": "Site 3", "config": {}})
+    response = client.post("/site", json={"name": "Site 3"})
     assert response.status_code == 201
     assert response.json["name"] == "Site 3"
 
@@ -49,7 +49,7 @@ def test_delete_site(client):
     response = client.delete("/site/999")
     assert response.status_code == 404
 
-    response = client.post("/site", json={"name": "Site 5", "config": {}})
+    response = client.post("/site", json={"name": "Site 5"})
     site_id = response.json["id"]
 
     response = client.delete(f"/site/{site_id}")

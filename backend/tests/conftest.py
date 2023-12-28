@@ -9,7 +9,6 @@ from flask.testing import FlaskClient
 @pytest.fixture(autouse=True)
 def app() -> Generator[APIFlask, None, None]:
     app = create_app("testing")
-    app.apscheduler.pause()
     with app.app_context():
         yield app
 

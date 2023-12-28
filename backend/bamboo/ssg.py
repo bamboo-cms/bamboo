@@ -6,7 +6,7 @@ import threading
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Generator, Optional
 
@@ -162,7 +162,11 @@ class Fetcher:
         """
         logger.info(f"Scheduling sync with interval {self.sync_interval}")
         self.scheduler.add_job(
-            "SSG", self.sync, trigger="interval", seconds=self.sync_interval.total_seconds()
+            "template_sync",
+            self.sync,
+            trigger="interval",
+            seconds=self.sync_interval.total_seconds(),
+            next_run_time=datetime.now(),
         )
 
     def stop(self):

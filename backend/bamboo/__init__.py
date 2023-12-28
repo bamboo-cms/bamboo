@@ -22,7 +22,9 @@ def create_app(config_name: str) -> APIFlask:
     if scheduler.running:
         scheduler.shutdown(wait=True)
     scheduler.init_app(app)
-    scheduler.start()
+    # do not start scheduler in testing mode
+    if not app.config.get("TESTING", False):
+        scheduler.start()
     # SSG
     ssg.init_app(app)
 

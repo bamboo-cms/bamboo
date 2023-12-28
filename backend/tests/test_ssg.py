@@ -1,13 +1,12 @@
 import tempfile
+import time
 import zipfile
-from datetime import timedelta
 from pathlib import Path
 from typing import Generator
 
 import pytest
 from bamboo.database.models import Site
-from bamboo.ssg import SSG, Fetcher
-from flask_apscheduler import APScheduler
+from bamboo.ssg import SSG
 
 files = {
     "index.html": b"hello {{site.name}}",
@@ -64,29 +63,23 @@ def mock_fetcher_request(httpx_mock, mock_sites, zip_file):
 
 
 @pytest.fixture(autouse=True)
-def apscheduler(app) -> APScheduler:
-    return app.apscheduler
-
-
-def test_fetcher(apscheduler, mock_sites):
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        fetcher = Fetcher(timedelta(seconds=1), apscheduler, Path(tmp_dir))
-        fetcher.sync()
-        fetcher.stop()
-        for site in mock_sites:
-            for file, content in files.items():
-                assert (Path(tmp_dir) / f"{site.id}_{site.name}" / file).exists()
-                assert (Path(tmp_dir) / f"{site.id}_{site.name}" / file).read_bytes() == content
-
-
-@pytest.fixture(autouse=True)
 def ssg(app) -> Generator[SSG, None, None]:
     with tempfile.TemporaryDirectory() as tmp_dir:
         ssg = app.extensions["ssg"]
         ssg.tpl_dir = Path(tmp_dir)
         ssg.fetcher.store_dir = Path(tmp_dir)
-        ssg.fetcher.sync()
+        app.apscheduler.start()
+        time.sleep(3)  # wait for first schedule
         yield ssg
+
+
+def test_fetcher(ssg, mock_sites):
+    for site in mock_sites:
+        for file, content in files.items():
+            assert (Path(ssg.fetcher.store_dir) / f"{site.id}_{site.name}" / file).exists()
+            assert (
+                Path(ssg.fetcher.store_dir) / f"{site.id}_{site.name}" / file
+            ).read_bytes() == content
 
 
 def test_ssg_render_page(app, ssg, mock_sites):

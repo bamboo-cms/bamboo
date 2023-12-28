@@ -53,8 +53,7 @@ def apscheduler(app):
 
 def test_fetcher_sync(apscheduler):
     with tempfile.TemporaryDirectory() as tmp_dir:
-        fetcher = Fetcher(timedelta(seconds=1), apscheduler)
-        fetcher.store_dir = Path(tmp_dir)
+        fetcher = Fetcher(timedelta(seconds=1), apscheduler, Path(tmp_dir))
         fetcher.sync()
         fetcher.stop()
         for site in Site.query.all():

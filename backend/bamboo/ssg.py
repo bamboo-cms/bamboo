@@ -4,12 +4,14 @@ import shutil
 import tempfile
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Generator, Optional
 
 import httpx
-from flask import Flask
+import jinja2
+from flask import Flask, Response, send_from_directory
 from flask_apscheduler import APScheduler
 
 from bamboo.database.models import Site
@@ -17,10 +19,24 @@ from bamboo.database.models import Site
 logger = logging.getLogger(__name__)
 
 
+reserved_dir = "jinja"  # Reserved for Jinja2, can not be accessed from web.
+static_dir = "static"  # JS, CSS, Image, etc. Send to browser directly.
+
+
 class SSG:
+    """
+    Static site generator.
+    """
+
     def __init__(self, app: Optional[Flask] = None):
         if app is not None:
             self.init_app(app)
+        self.tpl_dir = (
+            Path(__file__).parent.parent.parent / "data" / "templates"
+        )  # 'data' in root of project
+        self.jinja_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(self.tpl_dir), auto_reload=True
+        )
 
     def init_app(self, app: Flask):
         if not hasattr(app, "extensions"):
@@ -32,9 +48,61 @@ class SSG:
             scheduler: APScheduler = app.apscheduler
         else:
             raise RuntimeError("APScheduler is not initialized.")
-        fetcher = Fetcher(minutes, scheduler)
+        fetcher = Fetcher(minutes, scheduler, self.tpl_dir)
         fetcher.schedule()
         app.teardown_appcontext(lambda e: fetcher.stop())
+
+    def render_page(self, site: Site, path: str) -> Response:
+        """
+        Renders a page.
+
+        :param site: Site to render.
+        :param path: Path to render, it **must be not** startswith "/".
+        """
+        tpl_path = Path(f"{site.id}_{site.name}") / path
+        if path.startswith(reserved_dir):
+            return Response(f"Reserved path: {path}", status=403)
+        elif path.startswith(static_dir):
+            return send_from_directory(self.tpl_dir, tpl_path)
+        try:
+            template = self.jinja_env.get_template(str(tpl_path))
+        except jinja2.TemplateNotFound:
+            logger.warning(f"Template not found: {tpl_path}")
+            return Response(f"Template not found: {tpl_path}", status=404)
+        page = template.render(site=site)
+        return Response(page, mimetype="text/html")
+
+    @contextmanager
+    def pack_site(self, site: Site) -> Generator[zipfile.ZipFile, None, None]:
+        """
+        Packs a site into a zip file.
+
+        :param site: Site to pack.
+        """
+        site_dir = self.tpl_dir / f"{site.id}_{site.name}"
+        if not site_dir.exists():
+            raise FileNotFoundError(f"Site not found: {site.id}_{site.name}")
+        with tempfile.NamedTemporaryFile(suffix=".zip") as tmp:
+            with zipfile.ZipFile(tmp, "w") as zip_file:
+                # render page
+                for tpl_path in site_dir.glob("**.html"):
+                    if tpl_path.is_dir():
+                        continue
+                    # ignore reserved dir and static dir
+                    if tpl_path.parts[0] in (reserved_dir, static_dir):
+                        continue
+                    tpl_rel_path = tpl_path.relative_to(self.tpl_dir)
+                    tpl = self.jinja_env.get_template(str(tpl_rel_path))
+                    page = tpl.render(site=site)
+                    p = tpl_path.relative_to(site_dir)
+                    zip_file.writestr(str(p), page)
+                # copy static files
+                for static_path in site_dir.glob(f"{static_dir}/**/*"):
+                    if static_path.is_dir():
+                        continue
+                    p = static_path.relative_to(site_dir)
+                    zip_file.write(static_path, str(p))
+                yield zip_file
 
 
 gh_pattern = re.compile(r"https://github\.com/(?P<owner>\S+)/(?P<repo>\S+)")
@@ -49,12 +117,14 @@ class Fetcher:
     """
 
     def __init__(
-        self, sync_interval: timedelta, scheduler: APScheduler, config: Optional[dict] = None
+        self,
+        sync_interval: timedelta,
+        scheduler: APScheduler,
+        store_dir: Path,
+        config: Optional[dict] = None,
     ):
         self.sync_interval = sync_interval
-        self.store_dir = (
-            Path(__file__).parent.parent.parent / "data" / "templates"  # 'data' in root of project
-        )
+        self.store_dir = store_dir
         self.client = httpx.Client()
         self.scheduler = scheduler
         self.config = config or {}
@@ -121,27 +191,28 @@ class Fetcher:
         except httpx.HTTPError:
             logger.warning(f"Failed to fetch {file_url}, skipping.")
             return
-        tmp = tempfile.NamedTemporaryFile(suffix=".zip")
-        chunk_size = 128 * 1024  # 128 KB
-        for chunk in res.iter_bytes(chunk_size):
-            tmp.write(chunk)
-        tmp.seek(0)
-        try:
-            zip_file = zipfile.ZipFile(tmp)
-        except zipfile.BadZipFile:
-            logger.warning(f"Bad zip file: {file_url}, skipping.")
-            return
-        if zip_file.testzip() is not None:
-            logger.warning(f"Can not read zip file: {file_url}, skipping.")
-            return
-        if len(zip_file.namelist()) == 0:
-            logger.warning(f"Empty zip file: {file_url}, skipping.")
-            return
-        dir_name = zip_file.namelist()[0].split("/")[0]
-        dest = self.store_dir / name
-        if dest.exists():
-            shutil.rmtree(dest)
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            zip_file.extractall(tmp_dir)
-            shutil.copytree(Path(tmp_dir) / dir_name, dest)
-        logger.info(f"Stored {name} at {dest.absolute()}")
+        with tempfile.NamedTemporaryFile(suffix=".zip") as tmp:
+            chunk_size = 128 * 1024  # 128 KB
+            for chunk in res.iter_bytes(chunk_size):
+                tmp.write(chunk)
+            tmp.seek(0)
+            try:
+                zip_file = zipfile.ZipFile(tmp)
+            except zipfile.BadZipFile:
+                logger.warning(f"Bad zip file: {file_url}, skipping.")
+                return
+            if zip_file.testzip() is not None:
+                logger.warning(f"Can not read zip file: {file_url}, skipping.")
+                return
+            if len(zip_file.namelist()) == 0:
+                logger.warning(f"Empty zip file: {file_url}, skipping.")
+                return
+            dir_name = zip_file.namelist()[0].split("/")[0]
+            dest = self.store_dir / name
+            if dest.exists():
+                shutil.rmtree(dest)
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                zip_file.extractall(tmp_dir)
+                shutil.copytree(Path(tmp_dir) / dir_name, dest)
+            zip_file.close()
+            logger.info(f"Stored {name} at {dest.absolute()}")

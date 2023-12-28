@@ -8,14 +8,15 @@ from werkzeug.datastructures import FileStorage
 from bamboo.database import db
 from bamboo.database.models import Media
 from bamboo.jobs import gen_small_image
-from bamboo.schemas.media import IMAGE_SUFFIXES, MediaSchema
+from bamboo.schemas.media import IMAGE_SUFFIXES, MediaIn, MediaOut
 from bamboo.utils import gen_uuid
 
 media = APIBlueprint("media", __name__)
 
 
 @media.post("/")
-@media.input(MediaSchema, location="files")
+@media.input(MediaIn, location="files")
+@media.output(MediaOut)
 def upload_media(files_data: dict) -> dict | tuple[dict, int]:
     file: FileStorage = files_data["file"]
     upload_filename: str = file.filename
@@ -32,7 +33,4 @@ def upload_media(files_data: dict) -> dict | tuple[dict, int]:
     media_o = Media(content_type=content_type, path=filename)
     db.session.add(media_o)
     db.session.commit()
-    return {
-        "id": media_o.id,
-        "path": media_o.path,
-    }
+    return media_o

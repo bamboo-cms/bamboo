@@ -7,6 +7,7 @@ from typing import Generator
 import pytest
 from bamboo.database.models import Site
 from bamboo.ssg import SSG
+from flask.testing import FlaskClient
 
 files = {
     "index.html": b"hello {{site.name}}",
@@ -27,7 +28,9 @@ def mock_sites(app) -> list[Site]:
     sites = []
     for i in range(3):
         site = Site(
-            name=f"test{i}", config={}, template_url=f"https://github.com/bamboo-cms/bamboo{i}"
+            name=f"test{i}",
+            config={"sync": True},
+            template_url=f"https://github.com/bamboo-cms/bamboo{i}",
         )
         sites.append(site)
         db.session.add(site)
@@ -109,3 +112,17 @@ def test_ssg_pack_site(ssg, mock_sites):
                     assert file not in zf.namelist()
                 else:
                     assert zf.read(file) == b"hello " + site.name.encode()
+
+
+def test_web(client: FlaskClient, mock_sites):
+    for site in mock_sites:
+        for file, content in files.items():
+            res = client.get(f"/ssg/{site.id}/{file}")
+            if file.startswith("static"):
+                assert res.status_code == 200
+                assert res.data == content
+            elif file.startswith("jinja"):
+                assert res.status_code == 403
+            else:
+                assert res.status_code == 200
+                assert res.data == b"hello " + site.name.encode()

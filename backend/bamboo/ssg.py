@@ -150,7 +150,9 @@ class Fetcher:
         with ThreadPoolExecutor(max_workers=5) as executor:
             with self.scheduler.app.app_context():
                 for site in Site.query.all():
-                    if site.template_url.startswith("https://github.com"):
+                    if not site.config.get("sync") or not site.template_url:
+                        continue
+                    elif site.template_url.startswith("https://github.com"):
                         name = f"{site.id}_{site.name}"
                         executor.submit(self._fetch_gh, name, site.template_url, site.config)
                     else:

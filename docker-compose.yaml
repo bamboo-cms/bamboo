@@ -5,11 +5,16 @@ networks:
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: ./docker/backend/Dockerfile`
+      context: .
     environment:
+      TZ: ${TZ}
       DATABASE_URL: postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}
-      # todo ...
+    volumes:
+      - ${DATA_PATH}:/data
+    ports:
+      - "${PORT}:8000"
+    env_file:
+      - .env
 
   database:
     image: postgres:16
@@ -20,7 +25,7 @@ services:
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=${DATABASE_NAME}
     volumes:
-      - ${DATABASE_PATH}:/var/lib/postgresql/data
+      - ${DATA_PATH}/db:/var/lib/postgresql/data
     ports:
       - "${DATABASE_PORT}:5432"
     networks:
@@ -30,6 +35,8 @@ services:
         limits:
           memory: ${LIMIT_MEMORY_DATABASE}
     restart: always
+    env_file:
+      - .env
 
   redis:
     image: redis:5.0
@@ -37,7 +44,7 @@ services:
       - TZ=${TZ}
     privileged: true
     volumes:
-      - ${REDIS_PATH}:/data
+      - ${DATA_PATH}/redis:/data
     ports:
       - "${REDIS_PORT}:6379"
     networks:
@@ -47,3 +54,5 @@ services:
         limits:
           memory: ${LIMIT_MEMORY_REDIS}
     restart: always
+    env_file:
+      - .env

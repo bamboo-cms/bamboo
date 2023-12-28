@@ -4,6 +4,15 @@ ci:
 exclude: ^frontend/
 repos:
 
+  # export python requirements
+  - repo: https://github.com/pdm-project/pdm
+    rev: 2.11.1
+    hooks:
+      - id: pdm-export
+        # command arguments, e.g.:
+        args: ['-o', 'requirements.txt', '--without-hashes']
+        files: ^pdm.lock$
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:

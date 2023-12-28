@@ -1,2 +1,0 @@
-FLASK_APP=bamboo
-FLASK_ENV=development

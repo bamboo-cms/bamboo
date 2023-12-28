@@ -26,18 +26,18 @@ def auth_required(self, f=None, permissions: int = 0, optional=None) -> Any:
     Examples:
     Only login is required.
     ```python
-    from bamboo.blueprints.auth import auth, MANAGE_USER
+    from bamboo.blueprints.auth import token_auth, MANAGE_USER
 
-    @auth.auth_required
+    @token_auth.auth_required
     def manage_user_only():
         ...
     ```
 
     One permission is required.
     ```python
-    from bamboo.blueprints.auth import auth, MANAGE_USER
+    from bamboo.blueprints.auth import token_auth, MANAGE_USER
 
-    @auth.auth_required(permissions=MANAGE_USER)
+    @token_auth.auth_required(permissions=MANAGE_USER)
     def manage_user_only():
         ...
     ```
@@ -45,12 +45,12 @@ def auth_required(self, f=None, permissions: int = 0, optional=None) -> Any:
     Multiple permissions are required
     ```python
     from bamboo.blueprints.auth import (
-        auth,
+        token_auth,
         MANAGE_SITE,
         MANAGE_USER,
     )
 
-    @auth.auth_required(permissions=MANAGE_SITE | MANAGE_USER)
+    @token_auth.auth_required(permissions=MANAGE_SITE | MANAGE_USER)
     def manage_site_and_user():
         ...
     ```
@@ -65,8 +65,8 @@ def auth_required(self, f=None, permissions: int = 0, optional=None) -> Any:
     return self.login_required(f=None, role=[required_permissions], optional=optional)
 
 
-auth = HTTPTokenAuth(scheme="Bearer", header="Authorization")
-auth.auth_required = types.MethodType(auth_required, auth)
+token_auth = HTTPTokenAuth(scheme="Bearer", header="Authorization")
+token_auth.auth_required = types.MethodType(auth_required, token_auth)
 auth_bp = APIBlueprint("auth", __name__)
 
 
@@ -102,9 +102,9 @@ def login(json_data):
 
 @auth_bp.post("/refresh")
 @auth_bp.output(TokenSchema)
-@auth.auth_required
+@token_auth.auth_required
 def refresh():
-    user_id = auth.current_user.get("user_id")
+    user_id = token_auth.current_user.get("user_id")
     user = db.session.get(models.User, user_id)
 
     if user is None:
@@ -121,7 +121,7 @@ def refresh():
     return {"access_token": access_token}
 
 
-@auth.verify_token
+@token_auth.verify_token
 def verify_token(token: str) -> dict[str, Any] | None:
     try:
         payload = decode_jwt(encoded_token=token, secret_key=current_app.config.get("SECRET_KEY"))
@@ -131,7 +131,7 @@ def verify_token(token: str) -> dict[str, Any] | None:
     return {"user_id": payload.get("user_id")}
 
 
-@auth.get_user_roles
+@token_auth.get_user_roles
 def get_user_permissions(payload: dict[str, Any]) -> List[int]:
     user_permissions = []
     user_id = payload.get("user_id")
@@ -143,6 +143,6 @@ def get_user_permissions(payload: dict[str, Any]) -> List[int]:
         abort(403)
 
     for permission in PERMISSIONS:
-        if user.role.permissions & permission:
+        if user.role.permissions & permission:  # type: ignore[unnecessary-check]
             user_permissions.append(permission)
     return user_permissions

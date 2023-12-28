@@ -1,7 +1,7 @@
 from bamboo.blueprints.auth import (
     MANAGE_SITE,
     MANAGE_USER,
-    auth,
+    token_auth,
 )
 from bamboo.database import db, models
 from bamboo.utils import encode_jwt
@@ -18,17 +18,17 @@ def test_auth_required(app, client):
     db.session.commit()
 
     @app.get("/login-only")
-    @auth.auth_required
+    @token_auth.auth_required
     def loginr_only():
         return {"message": "Success"}
 
     @app.get("/user-only")
-    @auth.auth_required(permissions=MANAGE_USER)
+    @token_auth.auth_required(permissions=MANAGE_USER)
     def manage_user_only():
         return {"message": "Success"}
 
     @app.get("/site-and-user")
-    @auth.auth_required(permissions=MANAGE_SITE | MANAGE_USER)
+    @token_auth.auth_required(permissions=MANAGE_SITE | MANAGE_USER)
     def manage_site_and_user():
         return {"message": "Success"}
 

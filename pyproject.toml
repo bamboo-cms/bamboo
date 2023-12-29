@@ -19,7 +19,7 @@ license = {text = "BSD 3-Clause"}
 package-type = "application"
 
 [tool.pdm.scripts]
-serve = { cmd = "flask run", help = "Run the development server" }
+serve = { cmd = "flask run --debug", help = "Run the development server", env = { FLASK_APP = "backend/app.py"} }
 create-tables = { cmd = "flask create-tables", help = "Create tables" }
 drop-tables = { cmd = "flask drop-tables", help = "Drop tables" }
 

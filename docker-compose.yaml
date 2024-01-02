@@ -1,26 +1,39 @@
-networks:
-  innerNetwork:
-    driver: ${NETWORKS_DRIVER}
-
 services:
   backend:
+    image: 'bamboo:latest'
     build:
       context: .
-    environment:
-      TZ: ${TZ}
-      DATABASE_URL: postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}
     volumes:
       - ${DATA_PATH}:/data
     ports:
       - "${PORT}:8000"
+    environment:
+      - FLASK_CONFIG=production
     env_file:
       - .env
+    depends_on:
+      - database
+      - redis
+
+  worker:
+    image: 'bamboo:latest'
+    build:
+      context: .
+    command: ["rq", "worker"]
+    volumes:
+      - ${DATA_PATH}:/data
+    environment:
+      - FLASK_CONFIG=production
+    env_file:
+      - .env
+    depends_on:
+      - database
+      - redis
 
   database:
     image: postgres:16
     privileged: true
     environment:
-      - TZ=${TZ}
       - POSTGRES_USER=${DATABASE_USERNAME}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=${DATABASE_NAME}
@@ -28,8 +41,6 @@ services:
       - ${DATA_PATH}/db:/var/lib/postgresql/data
     ports:
       - "${DATABASE_PORT}:5432"
-    networks:
-      - innerNetwork
     deploy:
       resources:
         limits:
@@ -40,15 +51,11 @@ services:
 
   redis:
     image: redis:5.0
-    environment:
-      - TZ=${TZ}
     privileged: true
     volumes:
       - ${DATA_PATH}/redis:/data
     ports:
       - "${REDIS_PORT}:6379"
-    networks:
-      - innerNetwork
     deploy:
       resources:
         limits:

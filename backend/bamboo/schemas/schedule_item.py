@@ -18,3 +18,5 @@ class ScheduleItemOut(Schema):
     content = String()
     start = DateTime()
     end = DateTime()
+    updated_at = DateTime()
+    created_at = DateTime()

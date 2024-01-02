@@ -1,5 +1,5 @@
 from apiflask import Schema
-from apiflask.fields import Integer, String
+from apiflask.fields import DateTime, Integer, String
 from apiflask.validators import Length
 
 
@@ -14,3 +14,5 @@ class VenueOut(Schema):
     name = String()
     address = String()
     city_id = Integer()
+    updated_at = DateTime()
+    created_at = DateTime()

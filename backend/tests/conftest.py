@@ -3,6 +3,7 @@ from typing import Generator
 import pytest
 from apiflask import APIFlask
 from bamboo import create_app
+from bamboo.database import db
 from flask.testing import FlaskClient
 
 
@@ -11,6 +12,11 @@ def app() -> Generator[APIFlask, None, None]:
     app = create_app("testing")
     with app.app_context():
         yield app
+
+
+@pytest.fixture(autouse=True)
+def init_db():
+    db.create_all()
 
 
 @pytest.fixture

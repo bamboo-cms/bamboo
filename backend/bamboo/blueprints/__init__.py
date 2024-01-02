@@ -5,7 +5,9 @@ from bamboo.blueprints.auth import auth
 from bamboo.blueprints.blog import blog
 from bamboo.blueprints.command import command
 from bamboo.blueprints.error import error
+from bamboo.blueprints.organization import organization
 from bamboo.blueprints.page import page
+from bamboo.blueprints.partnership import partnership
 from bamboo.blueprints.talk import talk
 
 
@@ -17,3 +19,5 @@ def init_app(app: APIFlask) -> None:
     app.register_blueprint(blog, url_prefix="/blog")
     app.register_blueprint(page, url_prefix="/page")
     app.register_blueprint(talk, url_prefix="/talk")
+    app.register_blueprint(organization, url_prefix="/organization")
+    app.register_blueprint(partnership, url_prefix="/partnership")

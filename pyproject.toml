@@ -11,6 +11,7 @@ dependencies = [
     "flask-sqlalchemy>=3.1.1",
     "flask-migrate>=4.0.5",
     "python-dotenv>=1.0.0",
+    "python-jose[cryptography]>=3.3.0",
     "Flask-RQ2>=18.3",
     "Pillow>=10.1.0",
     "setuptools>=69.0.3",

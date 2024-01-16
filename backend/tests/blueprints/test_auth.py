@@ -11,7 +11,7 @@ from flask import current_app
 def test_auth_required(app, client):
     user_only = models.Role(name="manage_user", permissions=MANAGE_USER)
     user_and_site = models.Role(name="manage_user_and_site", permissions=MANAGE_SITE | MANAGE_USER)
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user1 = models.User(name="test", profile_image=profile, role=user_only)
     user2 = models.User(name="test2", profile_image=profile, role=user_and_site)
     db.session.add_all([user1, user2, profile, user_only, user_and_site])
@@ -69,7 +69,7 @@ def test_auth_required(app, client):
 
 def test_login(client):
     user_only = models.Role(name="manage_user", permissions=MANAGE_USER)
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user1 = models.User(name="test", profile_image=profile, role=user_only)
     user1.password = "123456"
     user2 = models.User(name="test2", profile_image=profile)
@@ -78,7 +78,7 @@ def test_login(client):
     db.session.commit()
 
     rv = client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "username": "test",
             "password": "123456",
@@ -89,7 +89,7 @@ def test_login(client):
     assert rv.json["refresh_token"] is not None
 
     rv = client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "username": "test1",
             "password": "123456",
@@ -99,7 +99,7 @@ def test_login(client):
     assert rv.json["message"] == "Incorrect username or password."
 
     rv = client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "username": "test",
             "password": "12345",
@@ -109,7 +109,7 @@ def test_login(client):
     assert rv.json["message"] == "Incorrect username or password."
 
     rv = client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "username": "test2",
             "password": "123456",
@@ -121,7 +121,7 @@ def test_login(client):
 
 def test_refresh(client):
     user_only = models.Role(name="manage_user", permissions=MANAGE_USER)
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user1 = models.User(name="test", profile_image=profile, role=user_only)
     user2 = models.User(name="test2", profile_image=profile)
     db.session.add_all([user1, user2, profile, user_only])
@@ -133,7 +133,7 @@ def test_refresh(client):
         token_type="refresh",
     )
 
-    rv = client.post("/auth/refresh", headers={"Authorization": f"Bearer {token}"})
+    rv = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {token}"})
     assert rv.status_code == 200
     assert rv.json["access_token"] is not None
 
@@ -143,7 +143,7 @@ def test_refresh(client):
         token_type="refresh",
     )
 
-    rv = client.post("/auth/refresh", headers={"Authorization": f"Bearer {token}"})
+    rv = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {token}"})
     assert rv.status_code == 403
     assert rv.json["message"] == "Forbidden"
 
@@ -153,6 +153,6 @@ def test_refresh(client):
         token_type="refresh",
     )
 
-    rv = client.post("/auth/refresh", headers={"Authorization": f"Bearer {token}"})
+    rv = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {token}"})
     assert rv.status_code == 401
     assert rv.json["message"] == "Unauthorized"

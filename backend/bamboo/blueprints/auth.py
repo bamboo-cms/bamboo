@@ -1,6 +1,5 @@
-import types
 from datetime import timedelta
-from typing import Any, List
+from typing import Any, Callable
 
 from apiflask import (
     APIBlueprint,
@@ -8,6 +7,7 @@ from apiflask import (
     abort,
 )
 from flask import current_app
+from flask_httpauth import Authorization
 from jose.exceptions import JWTError
 
 from bamboo.database import db, models
@@ -20,53 +20,64 @@ MANAGE_CONTENT = 0b100
 PERMISSIONS = (MANAGE_SITE, MANAGE_USER, MANAGE_CONTENT)
 
 
-def auth_required(self, f=None, permissions: int = 0, optional=None) -> Any:
-    """A wrapper of `login_required`.
+class TokenAuth(HTTPTokenAuth):
+    def auth_required(
+        self, f: Callable | None = None, permissions: int = 0, optional: Any | None = None
+    ) -> Any:
+        """A wrapper of `login_required`.
 
-    Examples:
-    Only login is required.
-    ```python
-    from bamboo.blueprints.auth import token_auth, MANAGE_USER
+            Examples:
+            Only login is required.
+            ```python
+            from bamboo.blueprints.auth import token_auth, MANAGE_USER
 
-    @token_auth.auth_required
-    def manage_user_only():
-        ...
-    ```
+            @token_auth.auth_required
+            def manage_user_only():
+                ...
+            ```
 
-    One permission is required.
-    ```python
-    from bamboo.blueprints.auth import token_auth, MANAGE_USER
+            One permission is required.
+            ```python
+            from bamboo.blueprints.auth import token_auth, MANAGE_USER
 
-    @token_auth.auth_required(permissions=MANAGE_USER)
-    def manage_user_only():
-        ...
-    ```
+            @token_auth.auth_required(permissions=MANAGE_USER)
+            def manage_user_only():
+                ...
+            ```
 
-    Multiple permissions are required
-    ```python
-    from bamboo.blueprints.auth import (
-        token_auth,
-        MANAGE_SITE,
-        MANAGE_USER,
-    )
+            Multiple permissions are required
+            ```python
+            from bamboo.blueprints.auth import (
+                token_auth,
+                MANAGE_SITE,
+                MANAGE_USER,
+            )
 
-    @token_auth.auth_required(permissions=MANAGE_SITE | MANAGE_USER)
-    def manage_site_and_user():
-        ...
-    ```
-    """
-    required_permissions = []
-    for perm in PERMISSIONS:
-        if perm & permissions:
-            required_permissions.append(perm)
+            @token_auth.auth_required(permissions=MANAGE_SITE | MANAGE_USER)
+            def manage_site_and_user():
+                ...
+        `    ``
+        """
+        if f:
+            return self.login_required(f=f)
+        return self.login_required(f=None, role=permissions, optional=optional)
 
-    if f:
-        return self.login_required(f=f)
-    return self.login_required(f=None, role=[required_permissions], optional=optional)
+    def authorize(
+        self, permissions: int | None, user: dict[str, Any] | None, _: Authorization | None
+    ) -> bool:
+        """Overriding authorize() to improve efficiency."""
+        if permissions is None:
+            return True
+
+        if self.get_user_roles_callback is None:
+            raise ValueError("get_user_roles callback is not defined")
+
+        user_permissions = self.ensure_sync(self.get_user_roles_callback)(user)
+
+        return (permissions & user_permissions) == permissions
 
 
-token_auth = HTTPTokenAuth(scheme="Bearer", header="Authorization")
-token_auth.auth_required = types.MethodType(auth_required, token_auth)
+token_auth = TokenAuth()
 auth = APIBlueprint("auth", __name__)
 
 
@@ -132,8 +143,7 @@ def verify_token(token: str) -> dict[str, Any] | None:
 
 
 @token_auth.get_user_roles
-def get_user_permissions(payload: dict[str, Any]) -> List[int]:
-    user_permissions = []
+def get_user_permissions(payload: dict[str, Any]) -> int:
     user_id = payload.get("user_id")
     user = db.session.get(models.User, user_id)
     if user is None:
@@ -142,7 +152,4 @@ def get_user_permissions(payload: dict[str, Any]) -> List[int]:
     if user.role is None:
         abort(403)
 
-    for permission in PERMISSIONS:
-        if user.role.permissions & permission:  # type: ignore[union-attr]
-            user_permissions.append(permission)
-    return user_permissions
+    return user.role.permissions  # type: ignore[union-attr]

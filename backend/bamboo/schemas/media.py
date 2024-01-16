@@ -19,3 +19,6 @@ class MediaIn(Schema):
 class MediaOut(Schema):
     id = Integer()
     path = String()
+    file_type = String()
+    url = String()
+    url_small = String()

@@ -1,8 +1,11 @@
+import mimetypes
+import os
 from datetime import datetime
 from typing import TYPE_CHECKING, NoReturn, Optional
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_sqlalchemy.model import Model
 from sqlalchemy import func
@@ -107,6 +110,36 @@ class Role(Base):
 class Media(Base):
     path: so.Mapped[str]
     content_type: so.Mapped[str]
+    file_type: so.Mapped[str]
+
+    @staticmethod
+    def get_file_type(filename: str, content_type: str) -> str:
+        suffix = os.path.splitext(filename)[1]
+        if content_type.startswith("image/"):
+            return "image"
+        elif content_type.startswith("video/"):
+            return "video"
+        elif content_type.startswith("audio/"):
+            return "audio"
+        elif suffix in (".pptx", ".key", ".ppt", ".pdf"):
+            return "slides"
+        else:
+            return "unknown"
+
+    @classmethod
+    def from_file(cls, filename: str) -> "Media":
+        content_type = mimetypes.guess_type(filename)[0] or ""
+        file_type = cls.get_file_type(filename, content_type)
+        return cls(path=filename, content_type=content_type, file_type=file_type)
+
+    @property
+    def url(self) -> str:
+        return f"{current_app.config['MEDIA_URL']}/{self.path}"
+
+    @property
+    def url_small(self) -> str:
+        stem, ext = os.path.splitext(self.path)
+        return f"{current_app.config['MEDIA_URL']}/{stem}{current_app.config['BAMBOO_SMALL_IMAGE_SUFFIX']}{ext}"
 
 
 class Site(Base):

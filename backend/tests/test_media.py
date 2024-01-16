@@ -15,16 +15,17 @@ def test_upload_media(app, client, mocker):
     )
     content = b"abcdef"
     response = client.post(
-        "/media/",
+        "/api/media/",
         data={
             "file": (io.BytesIO(content), "test.png"),
         },
     )
+    media_dir = Path(app.config["BAMBOO_MEDIA_DIR"])
     assert response.status_code == 200, response.json
     assert response.json["id"] == 1
     filename = "xxxxxxxx_test.png"
     # check mocked function called
-    mocked_function.assert_called_once_with(filename)
+    mocked_function.assert_called_once_with(media_dir / filename)
     assert response.json["path"] == filename
     file = Path(app.config["BAMBOO_MEDIA_DIR"]) / filename
     # check file exists and content
@@ -45,7 +46,7 @@ def test_gen_small_image(app):
     from bamboo.jobs import gen_small_image
 
     with app.app_context():
-        gen_small_image(filename)
+        gen_small_image(image_path)
     # check file exists
     small_filename = "test_small.png"
     small_image_path = media_dir / small_filename

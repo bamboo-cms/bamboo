@@ -8,13 +8,11 @@ rq = RQ()
 
 
 @rq.job
-def gen_small_image(filename: str) -> None:
+def gen_small_image(image_path: Path) -> None:
     """Generate a small image from the given image."""
-    media_dir = Path(current_app.config["BAMBOO_MEDIA_DIR"])
     small_suffix = current_app.config["BAMBOO_SMALL_IMAGE_SUFFIX"]
     small_ratio = current_app.config["BAMBOO_SMALL_IMAGE_RATIO"]
-    image_path = media_dir / filename
-    small_image_path = media_dir / f"{image_path.stem}{small_suffix}{image_path.suffix}"
+    small_image_path = image_path.parent / f"{image_path.stem}{small_suffix}{image_path.suffix}"
     with Image.open(image_path) as image:
         width, height = image.size
         small_width = int(width * small_ratio)

@@ -1,4 +1,3 @@
-import mimetypes
 from pathlib import Path
 
 from apiflask import APIBlueprint
@@ -20,7 +19,6 @@ media = APIBlueprint("media", __name__)
 def upload_media(files_data: dict) -> dict | tuple[dict, int]:
     file: FileStorage = files_data["file"]
     upload_filename: str = file.filename
-    content_type = mimetypes.guess_type(upload_filename)[0]
     filename = f"{gen_uuid()}_{upload_filename}"
     media_dir = Path(current_app.config["BAMBOO_MEDIA_DIR"])
     media_dir.mkdir(parents=True, exist_ok=True)
@@ -29,8 +27,8 @@ def upload_media(files_data: dict) -> dict | tuple[dict, int]:
     file_suffix = media_file.suffix.lower()
     if file_suffix in IMAGE_SUFFIXES:
         # async generate small image
-        gen_small_image.queue(filename)
-    media_o = Media(content_type=content_type, path=filename)
+        gen_small_image.queue(media_file)
+    media_o = Media.from_file(filename)
     db.session.add(media_o)
     db.session.commit()
     return media_o

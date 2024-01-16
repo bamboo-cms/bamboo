@@ -1,3 +1,5 @@
+from flask import current_app
+
 from bamboo.blueprints.auth import (
     MANAGE_SITE,
     MANAGE_USER,
@@ -5,7 +7,6 @@ from bamboo.blueprints.auth import (
 )
 from bamboo.database import db, models
 from bamboo.utils import encode_jwt
-from flask import current_app
 
 
 def test_auth_required(app, client):

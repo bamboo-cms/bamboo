@@ -1,8 +1,9 @@
 from datetime import timedelta
 
 import pytest
-from bamboo.utils import decode_jwt, encode_jwt
 from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
+
+from bamboo.utils import decode_jwt, encode_jwt
 
 
 def test_simple_jwt():

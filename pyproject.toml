@@ -58,3 +58,6 @@ target-version = "py312"
 
 [tool.ruff.mccabe]
 max-complexity = 10
+
+[tool.ruff.isort]
+known-first-party = ["bamboo"]

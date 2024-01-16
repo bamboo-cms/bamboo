@@ -1,11 +1,10 @@
 from datetime import timedelta
-from typing import Callable, TypeVar, overload
+from typing import Any, Callable, TypeVar, overload
 
 from apiflask import APIBlueprint, HTTPTokenAuth, abort
 from flask import current_app
 from flask_httpauth import Authorization
 from jose.exceptions import JWTError
-from traitlets import Any
 
 from bamboo.database import db, models
 from bamboo.schemas.auth import LoginSchema, TokenSchema

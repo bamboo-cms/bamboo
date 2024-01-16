@@ -23,7 +23,7 @@ def create_app(config_name: str) -> APIFlask:
     jobs.init_app(app)
     # Serve media files for development environment.
     # This will be overriden by nginx in production environment.
-    app.add_url_rule(f'{app.config['MEDIA_URL']}/<path:filename>', "media", media_endpoint)
+    app.add_url_rule(f"{app.config['MEDIA_URL']}/<path:filename>", "media", media_endpoint)
 
     # TODO: direct it to the dashboard when it's ready.
     @app.get("/")

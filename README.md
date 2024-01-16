@@ -55,7 +55,7 @@ it is recommended to use Docker on Windows platform):
 
 
 ```bash
-pdm run flask rq worker
+pdm worker
 ```
 
 Lint backend

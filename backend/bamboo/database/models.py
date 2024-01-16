@@ -14,9 +14,12 @@ db = SQLAlchemy()
 # https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#sqlite-foreign-keys
 @sa.event.listens_for(sa.engine.Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+    import sqlite3
+
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 if TYPE_CHECKING:

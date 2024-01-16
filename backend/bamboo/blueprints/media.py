@@ -7,7 +7,7 @@ from werkzeug.datastructures import FileStorage
 from bamboo.database import db
 from bamboo.database.models import Media
 from bamboo.jobs import gen_small_image
-from bamboo.schemas.media import IMAGE_SUFFIXES, MediaIn, MediaOut
+from bamboo.schemas.media import MediaIn, MediaOut
 from bamboo.utils import gen_uuid
 
 media = APIBlueprint("media", __name__)
@@ -24,11 +24,10 @@ def upload_media(files_data: dict) -> dict | tuple[dict, int]:
     media_dir.mkdir(parents=True, exist_ok=True)
     media_file = media_dir / filename
     file.save(media_file)
-    file_suffix = media_file.suffix.lower()
-    if file_suffix in IMAGE_SUFFIXES:
+    media_o = Media.from_file(filename)
+    if media_o.file_type == "image":
         # async generate small image
         gen_small_image.queue(media_file)
-    media_o = Media.from_file(filename)
     db.session.add(media_o)
     db.session.commit()
     return media_o

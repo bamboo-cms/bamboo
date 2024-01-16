@@ -3,7 +3,7 @@ from bamboo.database import db, models
 
 
 def test_user():
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user1 = models.User(name="test", profile_image=profile)
     user2 = models.User(name="test2", profile_image=profile)
     user1.password = "123456"
@@ -20,7 +20,7 @@ def test_user():
 
 def test_role():
     role = models.Role(name="test", permissions=1)
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user1 = models.User(name="test", profile_image=profile, role=role)
     user2 = models.User(name="test2", profile_image=profile, role=role)
     db.session.add_all([user1, user2, profile, role])
@@ -32,7 +32,7 @@ def test_role():
 
 def test_staff():
     site = models.Site(name="Test site", config={})
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user1 = models.User(name="test1", profile_image=profile)
     user2 = models.User(name="test2", profile_image=profile)
     city = models.City(name="New York", site=site)

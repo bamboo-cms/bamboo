@@ -99,3 +99,6 @@ def decode_jwt(
         issuer=issuer,
         audience=audience,
     )
+def gen_uuid() -> str:
+    """Generate a uuid hex string."""
+    return str(uuid.uuid4().hex)

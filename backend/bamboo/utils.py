@@ -86,7 +86,7 @@ def decode_jwt(
         encoded_token: The JWT to verify and decode.
         secret_key: The secret key for JWT.
         algorithm: The signing algorithm being used.
-        issuer (str | None, optional): _description_. Defaults to None.
+        issuer: The principal that issued JWT.
         others: For details about other args, see [the JWT RFC](https://datatracker.ietf.org/doc/html/rfc7519)
 
     Returns:

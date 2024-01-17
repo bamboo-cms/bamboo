@@ -11,6 +11,11 @@ dependencies = [
     "flask-sqlalchemy>=3.1.1",
     "flask-migrate>=4.0.5",
     "python-dotenv>=1.0.0",
+    "python-jose[cryptography]>=3.3.0",
+    "Flask-RQ2>=18.3",
+    "Pillow>=10.1.0",
+    "setuptools>=69.0.3",
+    "psycopg2-binary>=2.9.9",
 ]
 requires-python = ">=3.12"
 license = {text = "BSD 3-Clause"}
@@ -22,10 +27,13 @@ package-type = "application"
 serve = { cmd = "flask run", help = "Run the development server" }
 create-tables = { cmd = "flask create-tables", help = "Create tables" }
 drop-tables = { cmd = "flask drop-tables", help = "Drop tables" }
+worker = { cmd = "flask rq worker", help = "Run the RQ worker" }
 
 [tool.pdm.dev-dependencies]
 test = [
     "pytest>=7.4.3",
+    "pytest-mock>=3.12.0",
+    "fakeredis>=2.20.1",
 ]
 dev = [
     "pre-commit>=3.6.0",
@@ -50,3 +58,6 @@ target-version = "py312"
 
 [tool.ruff.mccabe]
 max-complexity = 10
+
+[tool.ruff.isort]
+known-first-party = ["bamboo"]

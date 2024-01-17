@@ -2,7 +2,7 @@ from bamboo.database import db, models
 
 
 def test_create_partnership(client):
-    response = client.post("/partnership/", json={})
+    response = client.post("/api/partnership/", json={})
     assert response.status_code == 422
     assert response.json["detail"]["json"]["city_id"][0] == "Missing data for required field."
     assert (
@@ -22,7 +22,7 @@ def test_create_partnership(client):
     db.session.commit()
 
     response = client.post(
-        "/partnership/",
+        "/api/partnership/",
         json={
             "city_id": 1,
             "organization_id": 1,
@@ -36,32 +36,32 @@ def test_create_partnership(client):
 
 
 def test_update_partnership(client):
-    response = client.patch("/partnership/", json={"category": "update"})
+    response = client.patch("/api/partnership/", json={"category": "update"})
     assert response.status_code == 422
 
     test_create_partnership(client)
     response = client.patch(
-        "/partnership/",
+        "/api/partnership/",
         json={"category": "update", "city_id": 1, "organization_id": 1},
     )
     assert response.status_code == 200
     assert response.json["category"] == "update"
 
     response = client.patch(
-        "/partnership/",
+        "/api/partnership/",
         json={"category": "update", "city_id": 1, "organization_id": 2},
     )
     assert response.status_code == 404
 
 
 def test_get_partnership(client):
-    response = client.get("/partnership/", query_string={"city_id": 1, "organization_id": 1})
+    response = client.get("/api/partnership/", query_string={"city_id": 1, "organization_id": 1})
     assert response.status_code == 404
 
 
 def test_get_partnership_list(client):
     response = client.get(
-        "/partnership/list",
+        "/api/partnership/list",
         query_string={
             "city_id": 1,
         },
@@ -71,7 +71,7 @@ def test_get_partnership_list(client):
 
     test_create_partnership(client)
     response = client.get(
-        "/partnership/list",
+        "/api/partnership/list",
         query_string={
             "city_id": 1,
         },
@@ -80,8 +80,8 @@ def test_get_partnership_list(client):
 
 
 def test_delete_partnership(client):
-    response = client.delete("/partnership/", query_string={"city_id": 999, "organization_id": 999})
+    response = client.delete("/api/partnership/", query_string={"city_id": 999, "organization_id": 999})
     assert response.status_code == 404
     test_create_partnership(client)
-    response = client.delete("/partnership/", query_string={"city_id": 1, "organization_id": 1})
+    response = client.delete("/api/partnership/", query_string={"city_id": 1, "organization_id": 1})
     assert response.status_code == 204

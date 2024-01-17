@@ -1,4 +1,5 @@
 from apiflask import APIFlask
+
 from bamboo.blueprints.admin import admin
 from bamboo.blueprints.auth import auth
 from bamboo.blueprints.blog import blog

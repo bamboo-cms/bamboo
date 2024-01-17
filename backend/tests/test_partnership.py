@@ -80,7 +80,9 @@ def test_get_partnership_list(client):
 
 
 def test_delete_partnership(client):
-    response = client.delete("/api/partnership/", query_string={"city_id": 999, "organization_id": 999})
+    response = client.delete(
+        "/api/partnership/", query_string={"city_id": 999, "organization_id": 999}
+    )
     assert response.status_code == 404
     test_create_partnership(client)
     response = client.delete("/api/partnership/", query_string={"city_id": 1, "organization_id": 1})

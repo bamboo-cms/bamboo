@@ -6,7 +6,7 @@ from .utils import query_count
 def test_city_staff():
     site = models.Site(name="Test site", config={})
     city = models.City(name="Test city", site=site)
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user = models.User(name="staff", profile_image=profile)
     city.staffs.add(models.Staff(staff=user, category="supporter"))
     db.session.add_all([city])
@@ -25,7 +25,7 @@ def test_city_staff():
 def test_city_staff_delete_user():
     site = models.Site(name="Test site", config={})
     city = models.City(name="Test city", site=site)
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user = models.User(name="staff", profile_image=profile)
     user.supporting.add(models.Staff(city=city, category="supporter"))
     db.session.add(user)

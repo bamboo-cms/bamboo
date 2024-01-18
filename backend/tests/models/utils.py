@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+
 from bamboo.database import db
 
 

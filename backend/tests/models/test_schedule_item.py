@@ -4,7 +4,7 @@ from bamboo.database import db, models
 
 
 def test_get_schedule_item(client):
-    response = client.get("/schedule_item/-1")
+    response = client.get("/api/schedule_item/-1")
     assert response.status_code == 404
 
     site = models.Site(name="Test site", config={})
@@ -15,7 +15,7 @@ def test_get_schedule_item(client):
     db.session.commit()
 
     response = client.post(
-        "/schedule_item/",
+        "/api/schedule_item/",
         json={
             "venue_id": venue.id,
             "talk_id": talk.id,
@@ -27,13 +27,13 @@ def test_get_schedule_item(client):
     assert response.status_code == 201
     schedule_item_id = response.json["id"]
 
-    response = client.get(f"/schedule_item/{schedule_item_id}")
+    response = client.get(f"/api/schedule_item/{schedule_item_id}")
     assert response.status_code == 200
     assert response.json["venue_id"] == 1
 
 
 def test_creat_schedule_item(client):
-    response = client.post("/schedule_item/", json={})
+    response = client.post("/api/schedule_item/", json={})
     assert response.status_code == 422
     assert response.json["message"] == "Validation error"
     assert len(response.json["detail"]["json"]) == 3
@@ -46,7 +46,7 @@ def test_creat_schedule_item(client):
     db.session.commit()
 
     response = client.post(
-        "/schedule_item/",
+        "/api/schedule_item/",
         json={
             "venue_id": venue.id,
             "talk_id": talk.id,
@@ -68,7 +68,7 @@ def test_update_schedule_item(client):
     db.session.commit()
 
     response = client.post(
-        "/schedule_item/",
+        "/api/schedule_item/",
         json={
             "venue_id": venue.id,
             "talk_id": talk.id,
@@ -79,7 +79,7 @@ def test_update_schedule_item(client):
     )
     schedule_item_id = response.json["id"]
 
-    response = client.patch(f"/schedule_item/{schedule_item_id}", json={"content": ""})
+    response = client.patch(f"/api/schedule_item/{schedule_item_id}", json={"content": ""})
     assert response.json["content"] == ""
 
 
@@ -91,11 +91,11 @@ def test_delete_schedule_item(client):
     db.session.add_all([site, city, venue, talk])
     db.session.commit()
 
-    response = client.delete("/schedule_item/-1")
+    response = client.delete("/api/schedule_item/-1")
     assert response.status_code == 404
 
     response = client.post(
-        "/schedule_item/",
+        "/api/schedule_item/",
         json={
             "venue_id": venue.id,
             "talk_id": talk.id,
@@ -106,5 +106,5 @@ def test_delete_schedule_item(client):
     )
     schedule_item_id = response.json["id"]
 
-    response = client.delete(f"/schedule_item/{schedule_item_id}")
+    response = client.delete(f"/api/schedule_item/{schedule_item_id}")
     assert response.status_code == 204

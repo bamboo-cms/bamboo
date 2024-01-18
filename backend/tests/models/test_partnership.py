@@ -2,13 +2,13 @@ from bamboo.database import db, models
 
 
 def test_partnership(client):
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     organization = models.Organization(
         name="code-kitchen", url="https://codekitchen.community", profile_image=profile
     )
     site = models.Site(name="Test site", config={})
     city = models.City(name="Test city", site=site)
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     user = models.User(name="staff", profile_image=profile)
     city.staffs.add(models.Staff(staff=user, category="supporter"))
     db.session.add_all([profile, organization, city])

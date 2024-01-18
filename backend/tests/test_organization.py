@@ -11,7 +11,7 @@ def test_create_organization(client):
         response.json["detail"]["json"]["profile_image_id"][0] == "Missing data for required field."
     )
 
-    db.session.add(models.Media(path="test.png", content_type="image/png"))
+    db.session.add(models.Media.from_file("test.png"))
     db.session.commit()
     response = client.post(
         "/api/organization/",
@@ -36,7 +36,7 @@ def test_update_organization(client):
     response = client.patch("/api/organization/1", json={"profile_image_id": 2})
     assert response.status_code == 404
 
-    image1 = models.Media(path="test1.png", content_type="image/png")
+    image1 = models.Media.from_file("test.png")
     db.session.add_all([image1])
 
     response = client.patch("/api/organization/1", json={"profile_image_id": 2})

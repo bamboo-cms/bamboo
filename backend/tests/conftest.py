@@ -15,11 +15,6 @@ def app() -> Generator[APIFlask, None, None]:
         yield app
 
 
-@pytest.fixture(autouse=True)
-def init_db():
-    db.create_all()
-
-
 @pytest.fixture
 def client(app: APIFlask) -> FlaskClient:
     return app.test_client()

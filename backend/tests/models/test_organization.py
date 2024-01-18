@@ -2,7 +2,7 @@ from bamboo.database import db, models
 
 
 def test_organization(client):
-    profile = models.Media(path="test.png", content_type="image/png")
+    profile = models.Media.from_file("test.png")
     organization = models.Organization(
         name="code-kitchen", url="https://codekitchen.community", profile_image=profile
     )

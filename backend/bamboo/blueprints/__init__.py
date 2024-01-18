@@ -6,7 +6,9 @@ from bamboo.blueprints.blog import blog
 from bamboo.blueprints.command import command
 from bamboo.blueprints.error import error
 from bamboo.blueprints.media import media
+from bamboo.blueprints.organization import organization
 from bamboo.blueprints.page import page
+from bamboo.blueprints.partnership import partnership
 from bamboo.blueprints.site import site
 from bamboo.blueprints.talk import talk
 from bamboo.blueprints.venue import venue
@@ -25,3 +27,5 @@ def init_app(app: APIFlask) -> None:
     app.register_blueprint(talk, url_prefix="/api/talk")
     app.register_blueprint(venue, url_prefix="/api/venue")
     app.register_blueprint(schedule_item, url_prefix="/api/schedule_item")
+    app.register_blueprint(organization, url_prefix="/api/organization")
+    app.register_blueprint(partnership, url_prefix="/api/partnership")

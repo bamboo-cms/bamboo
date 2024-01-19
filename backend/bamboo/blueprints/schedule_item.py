@@ -10,7 +10,7 @@ schedule_item = APIBlueprint("schedule_item", __name__)
 @schedule_item.get("/<int:schedule_item_id>")
 @schedule_item.output(ScheduleItemOut)
 def get_schedule_item(schedule_item_id):
-    return ScheduleItem.query.get_or_404(schedule_item_id)
+    return db.get_or_404(ScheduleItem, schedule_item_id)
 
 
 @schedule_item.post("/")

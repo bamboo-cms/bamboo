@@ -10,13 +10,13 @@ site = APIBlueprint("site", __name__)
 @site.get("/<int:site_id>")
 @site.output(SiteOut)
 def get_site(site_id):
-    return Site.query.get_or_404(site_id)
+    return db.get_or_404(Site, site_id)
 
 
 @site.get("/all")
 @site.output(SiteOut(many=True))
-def get_sites():
-    return Site.query.all()
+def list_sites():
+    return db.session.scalars(db.select(Site).order_by(Site.created_at.desc())).all()
 
 
 @site.post("")
@@ -33,7 +33,7 @@ def create_site(json_data):
 @site.input(SiteIn(partial=True), location="json")
 @site.output(SiteOut)
 def update_site(site_id, json_data):
-    site = Site.query.get_or_404(site_id)
+    site = db.get_or_404(Site, site_id)
     for attr, value in json_data.items():
         setattr(site, attr, value)
     db.session.commit()
@@ -43,7 +43,7 @@ def update_site(site_id, json_data):
 @site.delete("/<int:site_id>")
 @site.output({}, status_code=204)
 def delete_site(site_id):
-    site = Site.query.get_or_404(site_id)
+    site = db.get_or_404(Site, site_id)
     db.session.delete(site)
     db.session.commit()
     return ""

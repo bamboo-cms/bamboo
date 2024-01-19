@@ -50,6 +50,12 @@ pdm drop-tables
 pdm create-tables
 ```
 
+Create a superuser:
+
+```bash
+pdm run flask create-admin
+```
+
 Run [rq](https://github.com/rq/Flask-RQ2) worker (Due to the lack of support for forking,
 it is recommended to use Docker on Windows platform):
 

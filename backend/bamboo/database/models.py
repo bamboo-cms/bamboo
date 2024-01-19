@@ -1,7 +1,7 @@
 import mimetypes
 import os
 from datetime import datetime
-from typing import TYPE_CHECKING, NoReturn, Optional
+from typing import TYPE_CHECKING, Optional
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -68,6 +68,7 @@ class User(Base):
     name: so.Mapped[str]
     username: so.Mapped[Optional[str]] = so.mapped_column(unique=True, index=True)
     password_hash: so.Mapped[Optional[str]]
+    email: so.Mapped[Optional[str]]
     bio: so.Mapped[Optional[str]]
     introduction: so.Mapped[Optional[str]]
     active: so.Mapped[bool] = so.mapped_column(default=False)
@@ -88,7 +89,7 @@ class User(Base):
     )
 
     @property
-    def password(self) -> NoReturn:
+    def password(self) -> str:
         raise AttributeError("Write-only property!")
 
     @password.setter

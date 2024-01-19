@@ -27,7 +27,6 @@ def test_role():
     db.session.add_all([user1, user2, profile, role])
     db.session.commit()
     assert user1.role == user2.role == role
-    assert models.User.query.filter_by(role=role).all() == [user1, user2]
     assert db.session.scalars(db.select(models.User).filter_by(role=role)).all() == [user1, user2]
 
 

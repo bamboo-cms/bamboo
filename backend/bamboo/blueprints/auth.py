@@ -96,7 +96,7 @@ auth = APIBlueprint("auth", __name__)
 @auth.input(LoginSchema)
 @auth.output(TokenSchema)
 def login(json_data):
-    user = models.User.query.filter_by(name=json_data["username"]).first()
+    user = db.session.scalars(db.select(models.User).filter_by(name=json_data["username"])).first()
     if user is None or user.validate_password(json_data["password"]) is False:
         abort(401, "Incorrect username or password.")
 

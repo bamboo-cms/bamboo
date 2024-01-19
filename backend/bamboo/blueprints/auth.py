@@ -46,7 +46,7 @@ class TokenAuth(HTTPTokenAuth):
 
     @overload
     def auth_required(
-        self, *, permissions: int | None = None, optional: Any = None
+        self, *, permissions: Permission | None = None, optional: Any = None
     ) -> Callable[[F], F]:
         ...
 

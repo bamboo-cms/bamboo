@@ -71,7 +71,7 @@ class User(Base):
     email: so.Mapped[Optional[str]]
     bio: so.Mapped[Optional[str]]
     introduction: so.Mapped[Optional[str]]
-    active: so.Mapped[bool] = so.mapped_column(default=False)
+    active: so.Mapped[bool] = so.mapped_column(default=True)
     is_superuser: so.Mapped[bool] = so.mapped_column(default=False)
     profile_image_id: so.Mapped[int] = so.mapped_column(
         sa.ForeignKey("media.id", ondelete="CASCADE"), index=True
@@ -100,6 +100,12 @@ class User(Base):
         if self.password_hash is None:
             return False
         return check_password_hash(self.password_hash, password)
+
+    def allow_login(self) -> bool:
+        """Only the user with a role and the role's permissions is not 0 are allowed to log in."""
+        if not self.active:
+            return False
+        return self.is_superuser or (self.role is not None and self.role.permissions != 0)
 
 
 class Role(Base):

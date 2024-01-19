@@ -15,7 +15,7 @@ def test_user():
     assert user1.validate_password("123456")
     assert user1.role is None
     assert user2.role is None
-    assert not user1.active and not user1.is_superuser
+    assert user1.active and not user1.is_superuser
     assert user1.profile_image == user1.profile_image == profile
 
 

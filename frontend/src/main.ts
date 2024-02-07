@@ -1,5 +1,7 @@
 import { createApp } from 'vue'
-import './style.css'
+import { SnackbarService } from 'vue3-snackbar'
 import App from './App.vue'
+import './style.css'
+import 'vue3-snackbar/styles'
 
-createApp(App).mount('#app')
+createApp(App).use(SnackbarService).mount('#app')

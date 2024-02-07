@@ -1,30 +1,23 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { Vue3Snackbar } from 'vue3-snackbar'
+import { useAllSites } from './api/site'
+import { Button } from '@/components/ui/button'
+
+function handleClick() {
+  console.log('clicked')
+}
+
+useAllSites()
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo">
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo">
-    </a>
+  <div class="flex justify-center items-center h-screen flex-col gap-3">
+    <h1 class="font-bold text-3xl">
+      Hello world
+    </h1>
+    <Button @click="handleClick">
+      Click me
+    </Button>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+  <Vue3Snackbar top :duration="4000" />
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>

@@ -54,7 +54,7 @@ async function getNewToken(): Promise<string> {
   if (!state.value.refreshToken)
     return ''
   try {
-    const response = await axios.post<{ access_token: string }>('auth/refresh', {
+    const response = await axios.post<{ access_token: string }>('/api/auth/refresh', {
       headers: { Authorization: `Bearer ${state.value.refreshToken}` },
     })
     return response.data.access_token

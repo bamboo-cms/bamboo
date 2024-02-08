@@ -1,5 +1,5 @@
 from apiflask import Schema
-from apiflask.fields import String
+from apiflask.fields import Boolean, String
 
 
 class LoginSchema(Schema):
@@ -10,3 +10,12 @@ class LoginSchema(Schema):
 class TokenSchema(Schema):
     access_token = String()
     refresh_token = String()
+
+
+class CurrentUserSchema(Schema):
+    name = String()
+    username = String()
+    email = String()
+    profile = String()
+    is_superuser = Boolean()
+    role = String()

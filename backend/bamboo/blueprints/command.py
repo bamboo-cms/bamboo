@@ -27,7 +27,7 @@ def drop_tables() -> None:
 )
 @click.option("--name", "fullname", prompt=True, help="Admin full name.")
 @click.option("--email", prompt=True, help="Admin email.")
-def create_admin(username: str, password: str, name: str, email: str) -> None:
+def create_admin(username: str, password: str, fullname: str, email: str) -> None:
     """Create admin user."""
     from bamboo.database import models
 
@@ -38,7 +38,7 @@ def create_admin(username: str, password: str, name: str, email: str) -> None:
         db.session.add(profile)
 
     user = models.User(
-        name=name,
+        name=fullname,
         profile_image=profile,
         is_superuser=True,
         active=True,

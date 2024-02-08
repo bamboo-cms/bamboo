@@ -1,6 +1,6 @@
-import axios, { type AxiosRequestConfig } from 'axios'
+import axios from 'axios'
+import type { AxiosError, AxiosRequestConfig } from 'axios'
 import { useSnackbar } from 'vue3-snackbar'
-import type { UseAxiosOptions } from '@vueuse/integrations/useAxios'
 import { useAxios } from '@vueuse/integrations/useAxios'
 import { useGlobalState } from '@/lib/states'
 
@@ -15,32 +15,30 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-client.interceptors.response.use(undefined, (error) => {
+client.interceptors.response.use(undefined, async (error: AxiosError) => {
   console.error('Request failed', error)
-  // if (error.statusCode === 401) {
-  //   const state = useGlobalState()
-  //   const newToken = await getNewToken()
-  //   state.value.accessToken = newToken
-  //   if (newToken) {
-  //     return retryWithMergedOptions({
-  //       headers: {
-  //         Authorization: `Bearer ${newToken}`,
-  //       },
-  //     })
-  //   }
-  // }
+  if (error.response?.status === 401) {
+    const state = useGlobalState()
+    const newToken = await getNewToken()
+    state.value.accessToken = newToken
+    if (newToken) {
+      error.config!.headers.Authorization = `Bearer ${newToken}`
+      return await client.request(error.config!)
+    }
+  }
   return Promise.reject(error)
 })
 
 export function useFetch<T = any>(url: string, config?: AxiosRequestConfig) {
   const snackbar = useSnackbar()
   // inject instance argument to useAxios
-  const options: UseAxiosOptions = {
+  const options = {
     onError: (error: any) => {
-      console.error('Request failed', error)
+      if (error.response?.status === 401)
+        return
       snackbar.add({
         type: 'error',
-        text: `request failed with ${error.response?.status || 'unknown'}: ${error.response?.data || error.message}`,
+        text: `Request failed with ${error.response?.status || 'unknown'}: ${error.response?.data?.message ?? error.message}`,
       })
     },
     immediate: true,

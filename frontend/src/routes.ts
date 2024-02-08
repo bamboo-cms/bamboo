@@ -31,7 +31,7 @@ router.beforeEach(async (to) => {
   }
   catch (error) {
     setCurrentUser(undefined)
-    if (!unprotectedRoutes.includes(to.path)) {
+    if (!unprotectedRoutes.includes(to.path) && error.response.status === 401) {
       snackbar.add({
         type: 'error',
         text: 'You need to login to access this page',

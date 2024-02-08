@@ -4,6 +4,7 @@ import tailwind from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import Icons from 'unplugin-icons/vite'
+import svgLoader from 'vite-svg-loader'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +12,7 @@ export default defineConfig({
     vue(),
     tsconfigPaths({ loose: true }),
     Icons({ autoInstall: true, compiler: 'vue3' }),
+    svgLoader(),
   ],
   css: {
     postcss: {
@@ -20,7 +22,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000', // Flask server address
+        target: 'http://127.0.0.1:5000', // Flask server address
         changeOrigin: true,
       },
     },

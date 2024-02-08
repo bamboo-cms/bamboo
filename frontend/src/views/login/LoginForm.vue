@@ -15,6 +15,7 @@ import {
 import LucideSpinner from '~icons/lucide/loader-2'
 import { login } from '@/api/user'
 import { useGlobalState } from '@/lib/states'
+import Link from '@/components/Link.vue'
 
 const form = ref({
   username: '',
@@ -42,7 +43,7 @@ async function onSubmit(event: Event) {
     })
   }).catch((e) => {
     snackbar.add({
-      text: e.response.data.message,
+      text: e.response.data.message || e.response.statusText,
       type: 'error',
     })
   }).finally(() => {
@@ -66,6 +67,7 @@ async function onSubmit(event: Event) {
             auto-capitalize="none"
             auto-correct="off"
             :disabled="isLoading"
+            required
           />
         </FormControl>
       </FormItem>
@@ -80,6 +82,7 @@ async function onSubmit(event: Event) {
             type="password"
             auto-capitalize="none"
             :disabled="isLoading"
+            required
           />
         </FormControl>
       </FormItem>
@@ -90,8 +93,12 @@ async function onSubmit(event: Event) {
     </Button>
     <div class="border-t-2 border-neutral-200" />
     <div class="flex justify-center gap-3 text-slate-500 dark:text-slate-300">
-      <a href="https://github.com/bamboo-cms/bamboo" target="_blank">GitHub</a>
-      <a href="https://github.com/bamboo-cms/bamboo" target="_blank">Docs</a>
+      <Link to="https://github.com/bamboo-cms/bamboo" target="_blank">
+        GitHub
+      </Link>
+      <Link to="https://github.com/bamboo-cms/bamboo" target="_blank">
+        Docs
+      </Link>
     </div>
   </form>
 </template>

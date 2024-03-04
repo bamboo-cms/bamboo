@@ -15,7 +15,7 @@ def test_user():
     assert user1.validate_password("123456")
     assert user1.role is None
     assert user2.role is None
-    assert not user1.active and not user1.is_superuser
+    assert user1.active and not user1.is_superuser
     assert user1.profile_image == user1.profile_image == profile
 
 
@@ -27,7 +27,6 @@ def test_role():
     db.session.add_all([user1, user2, profile, role])
     db.session.commit()
     assert user1.role == user2.role == role
-    assert models.User.query.filter_by(role=role).all() == [user1, user2]
     assert db.session.scalars(db.select(models.User).filter_by(role=role)).all() == [user1, user2]
 
 

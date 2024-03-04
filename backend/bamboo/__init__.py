@@ -1,5 +1,5 @@
 from apiflask import APIFlask
-from flask import current_app, redirect, send_from_directory, url_for
+from flask import current_app, send_from_directory
 
 from bamboo import blueprints, database, jobs
 from bamboo.settings import config
@@ -12,7 +12,13 @@ def media_endpoint(filename: str) -> str:
 
 
 def create_app(config_name: str) -> APIFlask:
-    app = APIFlask("bamboo", title="Bamboo", version="0.1.0")
+    app = APIFlask(
+        "bamboo",
+        title="Bamboo",
+        version="0.1.0",
+        docs_path="/_docs",
+        docs_oauth2_redirect_path="/_docs/oauth2-redirect",
+    )
     app.config.from_object(config[config_name])
 
     # blueprints
@@ -24,10 +30,5 @@ def create_app(config_name: str) -> APIFlask:
     # Serve media files for development environment.
     # This will be overriden by nginx in production environment.
     app.add_url_rule(f"{app.config['MEDIA_URL']}/<path:filename>", "media", media_endpoint)
-
-    # TODO: direct it to the dashboard when it's ready.
-    @app.get("/")
-    def index():
-        return redirect(url_for("openapi.docs"))
 
     return app

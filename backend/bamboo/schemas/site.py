@@ -1,5 +1,5 @@
 from apiflask import Schema
-from apiflask.fields import Dict, String
+from apiflask.fields import Dict, Integer, String
 
 
 class SiteIn(Schema):
@@ -12,7 +12,7 @@ class SiteIn(Schema):
 
 
 class SiteOut(Schema):
-    id = String()
+    id = Integer()
     name = String()
     config = Dict()
     template_url = String()

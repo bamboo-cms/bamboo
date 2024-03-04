@@ -8,8 +8,8 @@ from bamboo.blueprints.media import media
 from bamboo.blueprints.organization import organization
 from bamboo.blueprints.page import page
 from bamboo.blueprints.partnership import partnership
-from bamboo.blueprints.schedule_item import schedule_item
 from bamboo.blueprints.root import root
+from bamboo.blueprints.schedule_item import schedule_item
 from bamboo.blueprints.site import site
 from bamboo.blueprints.talk import talk
 from bamboo.blueprints.venue import venue

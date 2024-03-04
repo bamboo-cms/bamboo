@@ -102,7 +102,7 @@ def login(json_data):
 
     # Only the user with a role and the role's permissions is not 0 are allowed to log in.
     if not user.allow_login():
-        abort(403, "This user is not authorized.")
+        abort(403)
 
     access_token = encode_jwt(
         payload={"user_id": user.id},

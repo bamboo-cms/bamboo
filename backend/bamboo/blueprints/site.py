@@ -10,14 +10,14 @@ site = APIBlueprint("site", __name__)
 
 @site.get("/<int:site_id>")
 @site.output(SiteOut)
-@token_auth.auth_required(permissions=Permission.SITE)
+@token_auth.auth_required
 def get_site(site_id):
     return db.get_or_404(Site, site_id)
 
 
 @site.get("/all")
 @site.output(SiteOut(many=True))
-@token_auth.auth_required(permissions=Permission.SITE)
+@token_auth.auth_required
 def list_sites():
     return db.session.scalars(db.select(Site).order_by(Site.created_at.desc())).all()
 

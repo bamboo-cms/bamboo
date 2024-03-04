@@ -1,8 +1,13 @@
+import os
 from pathlib import Path
 
 from flask import Blueprint, send_from_directory
 
-FRONTEND_DIR = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
+if dir_from_env := os.getenv("FRONTEND_DIR"):
+    FRONTEND_DIR = Path(dir_from_env).absolute()
+else:
+    FRONTEND_DIR = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
+
 root = Blueprint("root", __name__)
 
 

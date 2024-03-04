@@ -24,6 +24,7 @@ COPY --from=frontend_builder /bamboo-frontend/dist ./static
 COPY ./scripts/entrypoint.sh /entrypoint.sh
 # set data directory
 ENV DATA_DIR /data
+ENV FRONTEND_DIR /bamboo/static
 ENV FLASK_APP app.py
 VOLUME [ "/data" ]
 

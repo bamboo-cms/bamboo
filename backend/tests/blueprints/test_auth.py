@@ -78,11 +78,11 @@ def test_auth_required(app, client):
 def test_login(client):
     user_only = models.Role(name="manage_user", permissions=Permission.USER)
     profile = models.Media.from_file("test.png")
-    user1 = models.User(name="test", profile_image=profile, role=user_only)
+    user1 = models.User(name="test", username="test", profile_image=profile, role=user_only)
     user1.password = "123456"
-    user2 = models.User(name="test2", profile_image=profile)
+    user2 = models.User(name="test2", username="test2", profile_image=profile)
     user2.password = "123456"
-    admin = models.User(name="admin", profile_image=profile, is_superuser=True)
+    admin = models.User(name="admin", username="admin", profile_image=profile, is_superuser=True)
     admin.password = "123456"
     db.session.add_all([user1, user2, profile, user_only, admin])
     db.session.commit()

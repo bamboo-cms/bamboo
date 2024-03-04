@@ -21,7 +21,7 @@ requires-python = ">=3.12"
 license = {text = "BSD 3-Clause"}
 
 [tool.pdm]
-package-type = "application"
+distribution = false
 
 [tool.pdm.scripts]
 serve = { cmd = "flask run", help = "Run the development server" }

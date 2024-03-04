@@ -8,7 +8,7 @@ from flask_httpauth import Authorization
 from jose.exceptions import JWTError
 
 from bamboo.database import db, models
-from bamboo.schemas.auth import LoginSchema, TokenSchema
+from bamboo.schemas.auth import CurrentUserSchema, LoginSchema, TokenSchema
 from bamboo.utils import decode_jwt, encode_jwt
 
 F = TypeVar("F", bound=Callable)
@@ -95,8 +95,8 @@ auth = APIBlueprint("auth", __name__)
 @auth.output(TokenSchema)
 def login(json_data):
     user: models.User | None = db.session.scalars(
-        db.select(models.User).filter_by(name=json_data["username"])
-    ).first()
+        db.select(models.User).filter_by(username=json_data["username"])
+    ).one_or_none()
     if user is None or user.validate_password(json_data["password"]) is False:
         abort(401, "Incorrect username or password.")
 
@@ -139,15 +139,29 @@ def refresh():
     return {"access_token": access_token}
 
 
+@auth.get("/current")
+@auth.output(CurrentUserSchema)
+@token_auth.auth_required
+def current_user():
+    return {
+        "name": token_auth.current_user.name,
+        "username": token_auth.current_user.username,
+        "email": token_auth.current_user.email,
+        "profile": token_auth.current_user.profile_image.url_small,
+        "is_superuser": token_auth.current_user.is_superuser,
+        "role": token_auth.current_user.role.name if token_auth.current_user.role else None,
+    }
+
+
 @token_auth.verify_token
-def verify_token(token: str) -> models.User:
+def verify_token(token: str) -> models.User | None:
+    if not token:
+        return None
     try:
         payload = decode_jwt(encoded_token=token, secret_key=current_app.config.get("SECRET_KEY"))
     except JWTError as error:
         abort(401, str(error))
     user = db.session.get(models.User, payload.get("user_id"))
-    if user is None:
-        abort(401)
     return user
 
 

@@ -4,7 +4,7 @@ from bamboo.database import db
 from bamboo.database.models import Media, Organization
 from bamboo.schemas.organization import OrganizationIn, OrganizationOut
 
-organization = APIBlueprint("organization ", __name__)
+organization = APIBlueprint("organization", __name__)
 
 
 @organization.get("/<int:organization_id>")

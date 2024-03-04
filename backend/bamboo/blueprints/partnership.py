@@ -9,7 +9,7 @@ from bamboo.schemas.partnership import (
     PartnershipOut,
 )
 
-partnership = APIBlueprint("partnership ", __name__)
+partnership = APIBlueprint("partnership", __name__)
 
 
 @partnership.get("/")

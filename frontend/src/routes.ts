@@ -31,6 +31,7 @@ router.beforeEach(async (to) => {
   }
   catch (error) {
     setCurrentUser(undefined)
+    // @ts-expect-error Unknown error
     if (!unprotectedRoutes.includes(to.path) && error.response.status === 401) {
       snackbar.add({
         type: 'error',

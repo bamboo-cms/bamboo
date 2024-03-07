@@ -4,7 +4,7 @@ from bamboo.database import db, models
 
 
 def test_get_venue(client):
-    response = client.get("/api/venue/-1")
+    response = client.get("/api/venue/1")
     assert response.status_code == 404
 
     site = models.Site(name="Test site", config={})
@@ -36,7 +36,7 @@ def test_get_venue(client):
 
 
 def test_get_venue_schedules(client):
-    response = client.get("/api/venue/-1")
+    response = client.get("/api/venue/1")
     assert response.status_code == 404
 
     site = models.Site(name="Test site", config={})
@@ -99,7 +99,7 @@ def test_update_venue(client):
 
 
 def test_delete_venue(client):
-    response = client.delete("/api/venue/-1")
+    response = client.delete("/api/venue/1")
     assert response.status_code == 404
 
     site = models.Site(name="Test site", config={})

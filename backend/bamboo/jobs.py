@@ -39,8 +39,7 @@ def sync_templates(store_dir: Path, **kwargs) -> None:
     """
     sites: ScalarResult[Site] = db.session.execute(db.select(Site)).scalars()
     for site in sites:
-        # Skip the site if it is not configured to sync or has no template URL.
-        if site.config and not site.config.get("sync") or not site.template_url:
+        if not site.template_url:
             continue
         name = f"{site.id}_{site.name}"
         gh_token: str | None = kwargs.get("gh_token")

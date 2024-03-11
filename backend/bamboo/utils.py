@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import (
@@ -7,6 +8,7 @@ from typing import (
     MutableMapping,
 )
 
+import httpx
 from jose import jwt
 
 
@@ -104,3 +106,25 @@ def decode_jwt(
 def gen_uuid() -> str:
     """Generate a uuid hex string."""
     return str(uuid.uuid4().hex)
+
+
+gh_pattern = re.compile(r"github\.com/(?P<owner>\S+)/(?P<repo>\S+)")
+
+
+def fetch_github_repo(url: str, gh_token: str | None = None) -> bytes | None:
+    match = gh_pattern.match(url)
+    if match is None or "owner" not in match.groupdict() or "repo" not in match.groupdict():
+        return None
+    owner = match.group("owner")
+    repo = match.group("repo")
+    file_url = f"https://api.github.com/repos/{owner}/{repo}/zipball"
+    headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+    if gh_token:
+        headers["Authorization"] = f"Bearer {gh_token}"
+    with httpx.Client() as client:
+        try:
+            res = client.get(file_url, headers=headers, follow_redirects=True, timeout=30)
+            res.raise_for_status()
+        except httpx.HTTPError:
+            return None
+        return res.content

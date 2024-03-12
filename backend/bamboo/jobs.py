@@ -34,7 +34,7 @@ def sync_templates(store_dir: Path, **kwargs) -> None:
     """
     Sync the templates from the GitHub repository to local.
 
-    :param store_dir: The directory to store the template.
+    :param store_dir: The directory to store the template, every template will be store in a directory named {site.id}_{site.name} in this path.
     :param gh_token: The GitHub token to use for the sync. If None, GitHub may be forbid access.
     """
     sites: ScalarResult[Site] = db.session.execute(db.select(Site)).scalars()
@@ -59,6 +59,7 @@ def sync_templates(store_dir: Path, **kwargs) -> None:
         dest = store_dir / name
         if dest.exists():
             shutil.rmtree(dest)
+        dest.mkdir(parents=True)
         with tempfile.TemporaryDirectory() as tmp_dir:
             zip_file.extractall(tmp_dir)
             shutil.copytree(Path(tmp_dir) / dir_name, dest)

@@ -59,7 +59,6 @@ def sync_templates(store_dir: Path, **kwargs) -> None:
         dest = store_dir / name
         if dest.exists():
             shutil.rmtree(dest)
-        dest.mkdir(parents=True)
         with tempfile.TemporaryDirectory() as tmp_dir:
             zip_file.extractall(tmp_dir)
             shutil.copytree(Path(tmp_dir) / dir_name, dest)

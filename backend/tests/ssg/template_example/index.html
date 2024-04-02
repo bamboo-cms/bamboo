@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+{% block title %}{{ site.name }}{% endblock %}
+{% block body %}
+<div>index</div>
+<a href="{{ "test.html?a=1" | url(site) }}">Go</a>
+<script src="{{ "static/script.js" | url(site) }}"></script>
+{% endblock %}

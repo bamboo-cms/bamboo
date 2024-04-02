@@ -1,7 +1,7 @@
 from apiflask import APIFlask
 from flask import current_app, send_from_directory
 
-from bamboo import blueprints, database, jobs
+from bamboo import blueprints, database, jobs, ssg
 from bamboo.settings import config
 
 
@@ -27,6 +27,8 @@ def create_app(config_name: str) -> APIFlask:
     database.init_app(app)
     # jobs
     jobs.init_app(app)
+    # ssg
+    ssg.init_app(app)
     # Serve media files for development environment.
     # This will be overriden by nginx in production environment.
     app.add_url_rule(f"{app.config['MEDIA_URL']}/<path:filename>", "media", media_endpoint)

@@ -112,7 +112,7 @@ gh_pattern = re.compile(r"github\.com/(?P<owner>\S+)/(?P<repo>\S+)")
 
 
 def fetch_github_repo(url: str, gh_token: str | None = None) -> bytes | None:
-    match = gh_pattern.match(url)
+    match = gh_pattern.search(url)
     if match is None or "owner" not in match.groupdict() or "repo" not in match.groupdict():
         return None
     owner = match.group("owner")

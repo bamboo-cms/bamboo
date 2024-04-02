@@ -1,16 +1,16 @@
-from io import BytesIO
-from pathlib import Path
 import shutil
 import tempfile
-from zipfile import ZipFile, BadZipFile
+from io import BytesIO
+from pathlib import Path
+from zipfile import BadZipFile, ZipFile
 
 from flask import Flask, current_app
 from flask_rq2 import RQ
 from PIL import Image
 from sqlalchemy import ScalarResult
-from bamboo.utils import fetch_github_repo
 
-from bamboo.database.models import db, Site
+from bamboo.database.models import Site, db
+from bamboo.utils import fetch_github_repo
 
 rq = RQ()
 

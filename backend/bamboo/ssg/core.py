@@ -1,19 +1,18 @@
 from contextlib import contextmanager
 from pathlib import Path
-from tempfile import TemporaryDirectory, NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Generator
 from zipfile import ZipFile
-from flask import Flask, abort
+
 import jinja2
+from flask import Flask, abort
 
 from bamboo.database.models import Site
 from bamboo.jobs import sync_templates
-from bamboo.ssg.template import loader_func, Environment, url_filter_func
-from bamboo.ssg.views import site_bp, freezer
-
+from bamboo.ssg.template import Environment, loader_func, url_filter_func
+from bamboo.ssg.views import freezer, site_bp
 
 static_dir = "static"  # JS, CSS, Image, etc. Send to browser directly.
-
 
 
 class SSG:
@@ -22,7 +21,12 @@ class SSG:
         self.tpl_dir.mkdir(parents=True, exist_ok=True)
         app.register_blueprint(site_bp, url_prefix=url_prefix)
         gh_token = app.config.get("SSG_GH_TOKEN")
-        sync_templates.cron(f"*/{sync_interval} * * * *", args=(self.tpl_dir,), kwargs={"gh_token": gh_token}, name="ssg")
+        sync_templates.cron(
+            f"*/{sync_interval} * * * *",
+            args=(self.tpl_dir,),
+            kwargs={"gh_token": gh_token},
+            name="ssg",
+        )
 
         self.jinja_env = Environment(loader=jinja2.FunctionLoader(loader_func(self.tpl_dir)))
         self.jinja_env.filters["url"] = url_filter_func
@@ -38,13 +42,13 @@ class SSG:
         if tpl_file.startswith(static_dir):
             return self._send_static(site, tpl_file)
         return self._render_template(site, tpl_file, **kwargs)
-    
+
     def _send_static(self, site: Site, file: str):
         path = self.tpl_dir / f"{site.id}_{site.name}" / file
         if not path.exists():
             abort(404)
         return path.read_bytes()
-    
+
     def _render_template(self, site: Site, tpl_file: str, **kwargs):
         tpl_name = f"{site.id}_{site.name}/{tpl_file}"
         try:
@@ -52,7 +56,7 @@ class SSG:
         except jinja2.TemplateNotFound:
             abort(404)
         return tpl.render(site=site, **kwargs)
-    
+
     @contextmanager
     def pack(self, site: Site) -> Generator[Path, None, None]:
         """
@@ -75,4 +79,3 @@ class SSG:
                         if file.is_file():
                             zfile.write(file, file.relative_to(tmpdir))
                 yield Path(tmpfile.name)
-

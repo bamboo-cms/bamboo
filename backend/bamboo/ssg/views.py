@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+
 from flask import Blueprint, current_app, g, request
 from flask_frozen import Freezer
 
@@ -22,7 +23,7 @@ def validate_site_id():
     if current_app.config.get("SSG_PACKING") and current_app.config.get("SSG_SITE"):
         g.ssg_site = current_app.config.get("SSG_SITE")
         return
-    
+
     site_id = request.args.get("site_id")
     if not site_id:
         return "site_id is required", 400

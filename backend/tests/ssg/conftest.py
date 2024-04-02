@@ -1,7 +1,7 @@
 from io import BytesIO
+from pathlib import Path
 from zipfile import ZipFile
 
-from pathlib import Path
 import pytest
 from pytest_httpx import HTTPXMock
 
@@ -20,7 +20,9 @@ def mock_template_download(httpx_mock: HTTPXMock, example_template_path: Path):
     httpx_mock.add_response(
         url="https://api.github.com/repos/PyConChina/templates/zipball",
         status_code=302,
-        headers={"Location": "https://codeload.github.com/PyConChina/templates/legacy.zip/refs/heads/main"}
+        headers={
+            "Location": "https://codeload.github.com/PyConChina/templates/legacy.zip/refs/heads/main"
+        },
     )
     buf = BytesIO()
     with ZipFile(buf, "w") as zip_file:
@@ -32,8 +34,9 @@ def mock_template_download(httpx_mock: HTTPXMock, example_template_path: Path):
     httpx_mock.add_response(
         url="https://codeload.github.com/PyConChina/templates/legacy.zip/refs/heads/main",
         content=buf.read(),
-        headers={"Content-Type": "application/zip"}
+        headers={"Content-Type": "application/zip"},
     )
+
 
 @pytest.fixture(autouse=True)
 def app():

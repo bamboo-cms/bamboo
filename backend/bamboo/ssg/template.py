@@ -1,16 +1,17 @@
 from pathlib import Path
 
-from flask import current_app, g
 import jinja2
+from flask import current_app
 
 from bamboo.database.models import Site
-            
+
 
 def loader_func(base_dir: Path):
     def loader(tpl_name: str) -> str:
         return (base_dir / tpl_name).read_text()
+
     return loader
-            
+
 
 class Environment(jinja2.Environment):
     def join_path(self, template: str, parent: str) -> str:
@@ -22,7 +23,7 @@ class Environment(jinja2.Environment):
             prefix = ps[0]
             return f"{prefix}/{template}"
         return template
-    
+
 
 def url_filter_func(url: str, site: Site) -> str:
     # if it packing site currently, do not add site_id

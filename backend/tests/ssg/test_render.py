@@ -1,7 +1,8 @@
 import shutil
 from pathlib import Path
-from apiflask import APIFlask
+
 import pytest
+from apiflask import APIFlask
 
 from bamboo.database.models import Site
 from bamboo.ssg.core import SSG
@@ -26,6 +27,8 @@ def test_render(ssg: SSG, site: Site, example_template_path: Path):
 
     content = str(ssg.render(site, "index.html"))
     assert content.find(f"{site.name} | PyCon China") != -1
-    assert content.find(f'<link rel="stylesheet" href="static/style.css?site_id={site.id}" />') != -1
+    assert (
+        content.find(f'<link rel="stylesheet" href="static/style.css?site_id={site.id}" />') != -1
+    )
     assert content.find(f'<a href="test.html?a=1&site_id={site.id}">Go</a>') != -1
     assert content.find(f'<script src="static/script.js?site_id={site.id}"></script>') != -1

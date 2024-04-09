@@ -1,11 +1,12 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 from bamboo import create_app
 
-dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-if os.path.exists(dotenv_path):
+dotenv_path = Path(__file__).parent.resolve().joinpath(".env")
+if dotenv_path.exists():
     load_dotenv(dotenv_path)
 
 

@@ -18,6 +18,8 @@ class Permission(enum.IntFlag):
     CONTENT = enum.auto()
     USER = enum.auto()
     SITE = enum.auto()
+    CITY = enum.auto()
+    STAFF = enum.auto()
 
 
 class TokenAuth(HTTPTokenAuth):

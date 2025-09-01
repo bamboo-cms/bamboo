@@ -43,14 +43,12 @@ class TokenAuth(HTTPTokenAuth):
         return super().current_user
 
     @overload
-    def auth_required(self, f: F) -> F:
-        ...
+    def auth_required(self, f: F) -> F: ...
 
     @overload
     def auth_required(
         self, *, permissions: Permission | None = None, optional: Any = None
-    ) -> Callable[[F], F]:
-        ...
+    ) -> Callable[[F], F]: ...
 
     def auth_required(
         self, f: F | None = None, *, permissions: Permission | None = None, optional: Any = None
